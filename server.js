@@ -63,9 +63,10 @@ app.post('/api/webhook', async (req, res) => {
     res.status(200).send(blandResponse.data);
   } catch (error) {
     // Log the full error object and response data for debugging
-    console.error('Full error object:', error);
     console.error('Error response data:', error.response ? error.response.data : 'No response data');
     console.error('Error status:', error.response ? error.response.status : 'No status');
+    console.error("Request body: ", req.body)
+    console.error("Request headers: ", JSON.stringify(req.headers))
 
     // Send a 500 Internal Server Error response
     res.status(500).send('Internal Server Error: ' + error.message);
