@@ -70,7 +70,7 @@ app.post('/api/webhook', async (req, res) => {
     // Send data to Bland's API
     const blandResponse = await axios.post('https://api.bland.ai/v1/calls', blandData, {
       headers: {
-        'Authorization': `Bearer ${process.env.BLAND_API_KEY}`,
+        'Authorization': `${process.env.BLAND_API_KEY}`,
         'Content-Type': 'application/json',
       },
     });
