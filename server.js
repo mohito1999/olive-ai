@@ -62,7 +62,7 @@ app.post('/api/webhook', async (req, res) => {
       keywords: ['discount', 'offer', 'purchase'],
       language: 'en',
       record: true,
-      webhook: 'https://olive-ai-blue.vercel.app/api/webhook', // Update this URL after deploying
+      webhook: 'https://olive-ai-blue.vercel.app/api/webhook', // Correct Vercel webhook URL
       voicemail_message: `Hi ${lastRow[0]}, this is a representative from ${lastRow[3]}. We noticed you added ${lastRow[4]} to your cart but haven't completed the purchase. We are offering you a special discount to complete your purchase. Please call us back at your earliest convenience.`,
       answered_by_enabled: true,
     };
@@ -76,9 +76,13 @@ app.post('/api/webhook', async (req, res) => {
     });
     res.status(200).send(blandResponse.data);
   } catch (error) {
+    // Log the full error object and response data for debugging
     console.error('Full error object:', error);
     console.error('Error response data:', error.response ? error.response.data : 'No response data');
     console.error('Error status:', error.response ? error.response.status : 'No status');
+    console.error('API Key used (first 10 characters):', process.env.BLAND_API_KEY.substring(0, 10)); // For debugging
+
+    // Send a 500 Internal Server Error response
     res.status(500).send('Internal Server Error: ' + error.message);
   }
 });
