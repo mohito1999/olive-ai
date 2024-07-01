@@ -4,7 +4,7 @@ const { google } = require('googleapis');
 const axios = require('axios');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Google Sheets setup
 const sheets = google.sheets('v4');
@@ -21,8 +21,6 @@ const auth = new google.auth.GoogleAuth({
 // Webhook endpoint
 app.post('/api/webhook', async (req, res) => {
   try {
-    console.error('Request body:', req.body);
-    console.error('Request headers:', req.headers);
     const { name, phone, email, company, company_product } = req.body;
 
     // Append data to Google Sheets
