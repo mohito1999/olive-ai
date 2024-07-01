@@ -76,8 +76,10 @@ app.post('/api/webhook', async (req, res) => {
     });
     res.status(200).send(blandResponse.data);
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Internal Server Error');
+    console.error('Full error object:', error);
+    console.error('Error response data:', error.response ? error.response.data : 'No response data');
+    console.error('Error status:', error.response ? error.response.status : 'No status');
+    res.status(500).send('Internal Server Error: ' + error.message);
   }
 });
 
