@@ -21,6 +21,7 @@ const auth = new google.auth.GoogleAuth({
 // Webhook endpoint
 app.post('/api/webhook', async (req, res) => {
   try {
+    console.log('Request body:', req.body);
     const { name, phone, email, company, company_product } = req.body;
 
     // Append data to Google Sheets
@@ -66,7 +67,6 @@ app.post('/api/webhook', async (req, res) => {
     console.error('Full error object:', error);
     console.error('Error response data:', error.response ? error.response.data : 'No response data');
     console.error('Error status:', error.response ? error.response.status : 'No status');
-    console.error('API Key used (first 10 characters):', process.env.BLAND_API_KEY.substring(0, 10)); // For debugging
 
     // Send a 500 Internal Server Error response
     res.status(500).send('Internal Server Error: ' + error.message);
