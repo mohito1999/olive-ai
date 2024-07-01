@@ -21,7 +21,11 @@ const auth = new google.auth.GoogleAuth({
 // Webhook endpoint
 app.post('/api/webhook', async (req, res) => {
   try {
-    const { name, phone, email, company, company_product } = req.body;
+    const name = req.body['Name'];
+    const phone = req.body['Phone Number'];
+    const email = req.body['Email'];
+    const company = req.body['Company/Organization Name'];
+    const company_product = req.body['What does your company sell?'];
 
     // Append data to Google Sheets
     const authClient = await auth.getClient();
