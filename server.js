@@ -37,21 +37,12 @@ app.post('/api/webhook', async (req, res) => {
     };
     await sheets.spreadsheets.values.append(request);
 
-    // Retrieve the last row
-    const getLastRowRequest = {
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:E`,
-      auth: authClient,
-    };
-    const response = await sheets.spreadsheets.values.get(getLastRowRequest);
-    const lastRow = response.data.values[response.data.values.length - 1];
-
     // Prepare JSON for Bland
     const blandData = {
-      phone_number: `+91${lastRow[2]}`,
-      task: `You're Lucy, a relationship manager at ${lastRow[3]}. Your job is to call the customer who has abandoned items in their cart and try to convince them to go through with their order. You have the ability to offer discounts in the form of a coupon code if you think they might help. Here's an example dialogue: Person: Hello? You: Hi, this is Lucy from ${lastRow[3]}. Could you confirm your name for me? Person: Oh hi, this is ${lastRow[0]}. You: Hi ${lastRow[0]}, great to meet you! I noticed that you recently left ${lastRow[4]} in your cart on our website. I wanted to reach out and see if you had any questions or needed any assistance with your order. Person: Oh, gotcha. Actually, I got busy and couldn't complete the purchase. You: No worries at all. We just wanted to make sure everything is okay. If it helps, I can offer you a discount. How about a 10% off coupon code: SAVE10? Person: That sounds good, but I need to confirm a few details with my team before I can complete the purchase. You: I understand. Would it be helpful if I follow up with you tomorrow? How about 10 AM or 3 PM? Person: 10 AM works for me. You: Great, I've noted that down. I'll call you at 10 AM tomorrow to assist with your purchase. Is there anything specific you need help with in the meantime? Person: No, that should be all for now. You: Perfect. I look forward to speaking with you tomorrow at 10 AM. Have a great day! Person: Thanks, you too! You: Goodbye!`,
+      phone_number: `+91${phone}`,
+      task: `You're Lucy, a relationship manager at ${company}. Your job is to call the customer who has abandoned items in their cart and try to convince them to go through with their order. You have the ability to offer discounts in the form of a coupon code if you think they might help. Here's an example dialogue: Person: Hello? You: Hi, this is Lucy from ${company}. Could you confirm your name for me? Person: Oh hi, this is ${name}. You: Hi ${name}, great to meet you! I noticed that you recently left ${company_product} in your cart on our website. I wanted to reach out and see if you had any questions or needed any assistance with your order. Person: Oh, gotcha. Actually, I got busy and couldn't complete the purchase. You: No worries at all. We just wanted to make sure everything is okay. If it helps, I can offer you a discount. How about a 10% off coupon code: SAVE10? Person: That sounds good, but I need to confirm a few details with my team before I can complete the purchase. You: I understand. Would it be helpful if I follow up with you tomorrow? How about 10 AM or 3 PM? Person: 10 AM works for me. You: Great, I've noted that down. I'll call you at 10 AM tomorrow to assist with your purchase. Is there anything specific you need help with in the meantime? Person: No, that should be all for now. You: Perfect. I look forward to speaking with you tomorrow at 10 AM. Have a great day! Person: Thanks, you too! You: Goodbye!`,
       voice: 'maya',
-      first_sentence: `Hello ${lastRow[0]}, this is a representative from ${lastRow[3]}. We noticed you added ${lastRow[4]} to your cart but haven't completed the purchase. We are offering you a special discount to complete your purchase.`,
+      first_sentence: `Hello ${name}, this is a representative from ${company}. We noticed you added ${company_product} to your cart but haven't completed the purchase. We are offering you a special discount to complete your purchase.`,
       wait_for_greeting: false,
       block_interruptions: false,
       interruption_threshold: 50,
@@ -59,8 +50,6 @@ app.post('/api/webhook', async (req, res) => {
       keywords: ['discount', 'offer', 'purchase'],
       language: 'en',
       record: true,
-      webhook: 'https://olive-ai-blue.vercel.app/api/webhook', // Correct Vercel webhook URL
-      voicemail_message: `Hi ${lastRow[0]}, this is a representative from ${lastRow[3]}. We noticed you added ${lastRow[4]} to your cart but haven't completed the purchase. We are offering you a special discount to complete your purchase. Please call us back at your earliest convenience.`,
       answered_by_enabled: true,
     };
 
