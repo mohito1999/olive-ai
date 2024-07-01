@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { google } = require('googleapis');
 const axios = require('axios');
+const crypto = require('crypto');
 
 const app = express();
 app.use(bodyParser.json());
@@ -59,7 +60,7 @@ app.post('/webhook', async (req, res) => {
       keywords: ['discount', 'offer', 'purchase'],
       language: 'en',
       record: true,
-      webhook: 'https://olive-ai-blue.vercel.app/webhook', // Update this URL after deploying
+      webhook: 'https://olive-ai-blue.vercel.app/webhook',
       voicemail_message: `Hi ${lastRow[0]}, this is a representative from ${lastRow[3]}. We noticed you added ${lastRow[4]} to your cart but haven't completed the purchase. We are offering you a special discount to complete your purchase. Please call us back at your earliest convenience.`,
       answered_by_enabled: true,
     };
