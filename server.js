@@ -60,7 +60,7 @@ app.post('/api/webhook', async (req, res) => {
       wait_for_greeting: false,
       block_interruptions: false,
       interruption_threshold: 50,
-      model: 'turbo',
+      model: 'enhanced',
       keywords: ['discount', 'offer', 'purchase'],
       language: 'en',
       record: true,
