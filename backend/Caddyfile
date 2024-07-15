@@ -1,0 +1,9 @@
+{
+    email mohitmotwani1999@gmail.com
+}
+
+api.oliveai.in {
+    reverse_proxy olive:3000
+    encode gzip
+}
+

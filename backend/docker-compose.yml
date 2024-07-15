@@ -1,0 +1,39 @@
+services:
+    olive:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: olive
+        env_file:
+            - .env
+        ports:
+            - 3000:3000
+        develop:
+            watch:
+                - action: sync+restart
+                  path: ./
+                  target: /app/
+                - action: rebuild
+                  path: ./pyproject.toml
+                  target: /app/pyproject.toml
+                - action: sync+restart
+                  path: ./.env
+                  target: /app/.env
+
+    caddy:
+        image: caddy:alpine
+        restart: unless-stopped
+        container_name: caddy
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - $PWD/Caddyfile:/etc/caddy/Caddyfile
+            - $PWD/site:/srv
+            - caddy_data:/data
+            - caddy_config:/config
+
+volumes:
+    caddy_data:
+    caddy_config:
+

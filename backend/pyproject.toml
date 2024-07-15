@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "replit-vocode-telephony-server-11ai"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.10.0,<3.11"
+numpy = "^1.22.2"
+urllib3 = "^1.26.12"
+pydub = "0.25.1"
+twilio = "8.2.0"
+pyngrok = "^7.1.6"
+vocode = "0.1.114a0"
+sentry-sdk = {extras = ["fastapi"], version = "^2.7.1"}
+google-auth = "^2.31.0"
+google-cloud-speech = "^2.26.0"
+google-cloud-texttospeech = "^2.16.3"
+langchain = "0.2.7"
+langchain-aws = "0.1.11"
+cartesia = "^1.0.4"
+langchain-google-genai = "^1.0.7"
+langchain-google-vertexai = "^1.0.6"
+langgraph = "^0.1.8"
+langchain-groq = "^0.1.6"
+
+[tool.poetry.dev-dependencies]
+debugpy = "^1.6.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
