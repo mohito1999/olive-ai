@@ -1,11 +1,11 @@
-'use client';
+"use client";
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger
-} from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
@@ -13,45 +13,42 @@ import {
     FormItem,
     FormLabel,
     FormMessage
-} from '@/components/ui/form';
-import { Heading } from '@/components/ui/heading';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Heading } from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { profileSchema, type ProfileFormValues } from '@/lib/form-schema';
-import { cn } from '@/lib/utils';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertTriangleIcon, Trash, Trash2Icon } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { profileSchema, type ProfileFormValues } from "@/lib/form-schema";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertTriangleIcon, Trash, Trash2Icon } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 
 interface ProfileFormType {
     initialData: any | null;
     categories: any;
 }
 
-export const CreateProfileOne: React.FC<ProfileFormType> = ({
-    initialData,
-    categories
-}) => {
+export const CreateProfileOne: React.FC<ProfileFormType> = ({ initialData, categories }) => {
     const params = useParams();
     const router = useRouter();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [imgLoading, setImgLoading] = useState(false);
-    const title = initialData ? 'Edit product' : 'Create Your Profile';
+    const title = initialData ? "Edit product" : "Create Your Profile";
     const description = initialData
-        ? 'Edit a product.'
-        : 'To create your resume, we first need some basic information about you.';
-    const toastMessage = initialData ? 'Product updated.' : 'Product created.';
-    const action = initialData ? 'Save changes' : 'Create';
+        ? "Edit a product."
+        : "To create your resume, we first need some basic information about you.";
+    const toastMessage = initialData ? "Product updated." : "Product created.";
+    const action = initialData ? "Save changes" : "Create";
     const [previousStep, setPreviousStep] = useState(0);
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState({});
@@ -60,12 +57,12 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
     const defaultValues = {
         jobs: [
             {
-                jobtitle: '',
-                employer: '',
-                startdate: '',
-                enddate: '',
-                jobcountry: '',
-                jobcity: ''
+                jobtitle: "",
+                employer: "",
+                startdate: "",
+                enddate: "",
+                jobcountry: "",
+                jobcity: ""
             }
         ]
     };
@@ -73,7 +70,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
         defaultValues,
-        mode: 'onChange'
+        mode: "onChange"
     });
 
     const {
@@ -83,7 +80,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
 
     const { append, remove, fields } = useFieldArray({
         control,
-        name: 'jobs'
+        name: "jobs"
     });
 
     const onSubmit = async (data: ProfileFormValues) => {
@@ -96,7 +93,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                 // console.log("product", res);
             }
             router.refresh();
-            router.push(`/dashboard/products`);
+            router.push(`/products`);
         } catch (error: any) {
         } finally {
             setLoading(false);
@@ -117,7 +114,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
     };
 
     const processForm: SubmitHandler<ProfileFormValues> = (data) => {
-        console.log('data ==>', data);
+        console.log("data ==>", data);
         setData(data);
         // api call and reset
         // form.reset();
@@ -127,20 +124,13 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
 
     const steps = [
         {
-            id: 'Step 1',
-            name: 'Personal Information',
-            fields: [
-                'firstname',
-                'lastname',
-                'email',
-                'contactno',
-                'country',
-                'city'
-            ]
+            id: "Step 1",
+            name: "Personal Information",
+            fields: ["firstname", "lastname", "email", "contactno", "country", "city"]
         },
         {
-            id: 'Step 2',
-            name: 'Professional Informations',
+            id: "Step 2",
+            name: "Professional Informations",
             // fields are mapping and flattening for the error to be trigger  for the dynamic fields
             fields: fields
                 ?.map((_, index) => [
@@ -154,7 +144,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                 ])
                 .flat()
         },
-        { id: 'Step 3', name: 'Complete' }
+        { id: "Step 3", name: "Complete" }
     ];
 
     const next = async () => {
@@ -182,8 +172,8 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
         }
     };
 
-    const countries = [{ id: 'wow', name: 'india' }];
-    const cities = [{ id: '2', name: 'kerala' }];
+    const countries = [{ id: "wow", name: "india" }];
+    const cities = [{ id: "2", name: "kerala" }];
 
     return (
         <>
@@ -210,9 +200,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                     <span className="text-sm font-medium text-sky-600 transition-colors ">
                                         {step.id}
                                     </span>
-                                    <span className="text-sm font-medium">
-                                        {step.name}
-                                    </span>
+                                    <span className="text-sm font-medium">{step.name}</span>
                                 </div>
                             ) : currentStep === index ? (
                                 <div
@@ -222,18 +210,14 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                     <span className="text-sm font-medium text-sky-600">
                                         {step.id}
                                     </span>
-                                    <span className="text-sm font-medium">
-                                        {step.name}
-                                    </span>
+                                    <span className="text-sm font-medium">{step.name}</span>
                                 </div>
                             ) : (
                                 <div className="group flex h-full w-full flex-col border-l-4 border-gray-200 py-2 pl-4 transition-colors md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4">
                                     <span className="text-sm font-medium text-gray-500 transition-colors">
                                         {step.id}
                                     </span>
-                                    <span className="text-sm font-medium">
-                                        {step.name}
-                                    </span>
+                                    <span className="text-sm font-medium">{step.name}</span>
                                 </div>
                             )}
                         </li>
@@ -242,15 +226,12 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
             </div>
             <Separator />
             <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(processForm)}
-                    className="w-full space-y-8"
-                >
+                <form onSubmit={form.handleSubmit(processForm)} className="w-full space-y-8">
                     <div
                         className={cn(
                             currentStep === 1
-                                ? 'w-full md:inline-block'
-                                : 'gap-8 md:grid md:grid-cols-3'
+                                ? "w-full md:inline-block"
+                                : "gap-8 md:grid md:grid-cols-3"
                         )}
                     >
                         {currentStep === 0 && (
@@ -311,9 +292,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                     name="contactno"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>
-                                                Contact Number
-                                            </FormLabel>
+                                            <FormLabel>Contact Number</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
@@ -341,27 +320,21 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue
-                                                            defaultValue={
-                                                                field.value
-                                                            }
+                                                            defaultValue={field.value}
                                                             placeholder="Select a country"
                                                         />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
                                                     {/* @ts-ignore  */}
-                                                    {countries.map(
-                                                        (country) => (
-                                                            <SelectItem
-                                                                key={country.id}
-                                                                value={
-                                                                    country.id
-                                                                }
-                                                            >
-                                                                {country.name}
-                                                            </SelectItem>
-                                                        )
-                                                    )}
+                                                    {countries.map((country) => (
+                                                        <SelectItem
+                                                            key={country.id}
+                                                            value={country.id}
+                                                        >
+                                                            {country.name}
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
@@ -383,9 +356,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue
-                                                            defaultValue={
-                                                                field.value
-                                                            }
+                                                            defaultValue={field.value}
                                                             placeholder="Select a city"
                                                         />
                                                     </SelectTrigger>
@@ -393,10 +364,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                 <SelectContent>
                                                     {/* @ts-ignore  */}
                                                     {cities.map((city) => (
-                                                        <SelectItem
-                                                            key={city.id}
-                                                            value={city.id}
-                                                        >
+                                                        <SelectItem key={city.id} value={city.id}>
                                                             {city.name}
                                                         </SelectItem>
                                                     ))}
@@ -420,9 +388,8 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                         <AccordionItem value="item-1">
                                             <AccordionTrigger
                                                 className={cn(
-                                                    'relative !no-underline [&[data-state=closed]>button]:hidden [&[data-state=open]>.alert]:hidden',
-                                                    errors?.jobs?.[index] &&
-                                                        'text-red-700'
+                                                    "relative !no-underline [&[data-state=closed]>button]:hidden [&[data-state=open]>.alert]:hidden",
+                                                    errors?.jobs?.[index] && "text-red-700"
                                                 )}
                                             >
                                                 {`Work Experience ${index + 1}`}
@@ -431,9 +398,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                     variant="outline"
                                                     size="icon"
                                                     className="absolute right-8"
-                                                    onClick={() =>
-                                                        remove(index)
-                                                    }
+                                                    onClick={() => remove(index)}
                                                 >
                                                     <Trash2Icon className="h-4 w-4 " />
                                                 </Button>
@@ -446,7 +411,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                             <AccordionContent>
                                                 <div
                                                     className={cn(
-                                                        'relative mb-4 gap-8 rounded-md border p-4 md:grid md:grid-cols-3'
+                                                        "relative mb-4 gap-8 rounded-md border p-4 md:grid md:grid-cols-3"
                                                     )}
                                                 >
                                                     <FormField
@@ -454,15 +419,11 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                         name={`jobs.${index}.jobtitle`}
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>
-                                                                    Job title
-                                                                </FormLabel>
+                                                                <FormLabel>Job title</FormLabel>
                                                                 <FormControl>
                                                                     <Input
                                                                         type="text"
-                                                                        disabled={
-                                                                            loading
-                                                                        }
+                                                                        disabled={loading}
                                                                         {...field}
                                                                     />
                                                                 </FormControl>
@@ -475,15 +436,11 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                         name={`jobs.${index}.employer`}
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>
-                                                                    Employer
-                                                                </FormLabel>
+                                                                <FormLabel>Employer</FormLabel>
                                                                 <FormControl>
                                                                     <Input
                                                                         type="text"
-                                                                        disabled={
-                                                                            loading
-                                                                        }
+                                                                        disabled={loading}
                                                                         {...field}
                                                                     />
                                                                 </FormControl>
@@ -496,15 +453,11 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                         name={`jobs.${index}.startdate`}
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>
-                                                                    Start date
-                                                                </FormLabel>
+                                                                <FormLabel>Start date</FormLabel>
                                                                 <FormControl>
                                                                     <Input
                                                                         type="date"
-                                                                        disabled={
-                                                                            loading
-                                                                        }
+                                                                        disabled={loading}
                                                                         {...field}
                                                                     />
                                                                 </FormControl>
@@ -517,15 +470,11 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                         name={`jobs.${index}.enddate`}
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>
-                                                                    End date
-                                                                </FormLabel>
+                                                                <FormLabel>End date</FormLabel>
                                                                 <FormControl>
                                                                     <Input
                                                                         type="date"
-                                                                        disabled={
-                                                                            loading
-                                                                        }
+                                                                        disabled={loading}
                                                                         {...field}
                                                                     />
                                                                 </FormControl>
@@ -538,22 +487,12 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                         name={`jobs.${index}.jobcountry`}
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>
-                                                                    Job country
-                                                                </FormLabel>
+                                                                <FormLabel>Job country</FormLabel>
                                                                 <Select
-                                                                    disabled={
-                                                                        loading
-                                                                    }
-                                                                    onValueChange={
-                                                                        field.onChange
-                                                                    }
-                                                                    value={
-                                                                        field.value
-                                                                    }
-                                                                    defaultValue={
-                                                                        field.value
-                                                                    }
+                                                                    disabled={loading}
+                                                                    onValueChange={field.onChange}
+                                                                    value={field.value}
+                                                                    defaultValue={field.value}
                                                                 >
                                                                     <FormControl>
                                                                         <SelectTrigger>
@@ -567,20 +506,14 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                                     </FormControl>
                                                                     <SelectContent>
                                                                         {countries.map(
-                                                                            (
-                                                                                country
-                                                                            ) => (
+                                                                            (country) => (
                                                                                 <SelectItem
-                                                                                    key={
-                                                                                        country.id
-                                                                                    }
+                                                                                    key={country.id}
                                                                                     value={
                                                                                         country.id
                                                                                     }
                                                                                 >
-                                                                                    {
-                                                                                        country.name
-                                                                                    }
+                                                                                    {country.name}
                                                                                 </SelectItem>
                                                                             )
                                                                         )}
@@ -595,22 +528,12 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                         name={`jobs.${index}.jobcity`}
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>
-                                                                    Job city
-                                                                </FormLabel>
+                                                                <FormLabel>Job city</FormLabel>
                                                                 <Select
-                                                                    disabled={
-                                                                        loading
-                                                                    }
-                                                                    onValueChange={
-                                                                        field.onChange
-                                                                    }
-                                                                    value={
-                                                                        field.value
-                                                                    }
-                                                                    defaultValue={
-                                                                        field.value
-                                                                    }
+                                                                    disabled={loading}
+                                                                    onValueChange={field.onChange}
+                                                                    value={field.value}
+                                                                    defaultValue={field.value}
                                                                 >
                                                                     <FormControl>
                                                                         <SelectTrigger>
@@ -623,24 +546,14 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                                                         </SelectTrigger>
                                                                     </FormControl>
                                                                     <SelectContent>
-                                                                        {cities.map(
-                                                                            (
-                                                                                city
-                                                                            ) => (
-                                                                                <SelectItem
-                                                                                    key={
-                                                                                        city.id
-                                                                                    }
-                                                                                    value={
-                                                                                        city.id
-                                                                                    }
-                                                                                >
-                                                                                    {
-                                                                                        city.name
-                                                                                    }
-                                                                                </SelectItem>
-                                                                            )
-                                                                        )}
+                                                                        {cities.map((city) => (
+                                                                            <SelectItem
+                                                                                key={city.id}
+                                                                                value={city.id}
+                                                                            >
+                                                                                {city.name}
+                                                                            </SelectItem>
+                                                                        ))}
                                                                     </SelectContent>
                                                                 </Select>
                                                                 <FormMessage />
@@ -657,15 +570,15 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                                     <Button
                                         type="button"
                                         className="flex justify-center"
-                                        size={'lg'}
+                                        size={"lg"}
                                         onClick={() =>
                                             append({
-                                                jobtitle: '',
-                                                employer: '',
-                                                startdate: '',
-                                                enddate: '',
-                                                jobcountry: '',
-                                                jobcity: ''
+                                                jobtitle: "",
+                                                employer: "",
+                                                startdate: "",
+                                                enddate: "",
+                                                jobcountry: "",
+                                                jobcity: ""
                                             })
                                         }
                                     >
@@ -677,9 +590,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                         {currentStep === 2 && (
                             <div>
                                 <h1>Completed</h1>
-                                <pre className="whitespace-pre-wrap">
-                                    {JSON.stringify(data)}
-                                </pre>
+                                <pre className="whitespace-pre-wrap">{JSON.stringify(data)}</pre>
                             </div>
                         )}
                     </div>

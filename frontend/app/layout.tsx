@@ -4,8 +4,9 @@ import '@uploadthing/react/styles.css';
 import type { Metadata } from 'next';
 import NextTopLoader from 'nextjs-toploader';
 import { Inter } from 'next/font/google';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
 import './globals.css';
-import { auth } from '@/auth';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -14,17 +15,15 @@ export const metadata: Metadata = {
     description: 'Basic dashboard with Next.js and Shadcn'
 };
 
-export default async function RootLayout({
-    children
-}: {
-    children: React.ReactNode;
-}) {
-    const session = await auth();
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+    const supabase = createClient();
+
+    const data = {}
     return (
         <html lang="en" suppressHydrationWarning>
             <body className={`${inter.className} overflow-hidden`}>
                 <NextTopLoader />
-                <Providers session={session}>
+                <Providers session={data}>
                     <Toaster />
                     {children}
                 </Providers>
