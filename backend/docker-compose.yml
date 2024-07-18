@@ -1,24 +1,15 @@
 services:
-    olive:
-        build:
-            context: .
-            dockerfile: ./Dockerfile
-        container_name: olive
-        env_file:
-            - .env
-        ports:
-            - 3000:3000
-        develop:
-            watch:
-                - action: sync+restart
-                  path: ./
-                  target: /app/
-                - action: rebuild
-                  path: ./pyproject.toml
-                  target: /app/pyproject.toml
-                - action: sync+restart
-                  path: ./.env
-                  target: /app/.env
+    # olive-db:
+    #     image: postgres
+    #     container_name: olive-db
+    #     volumes:
+    #         - "olive_db:/var/lib/postgresql/data"
+    #     # To log all statements
+    #     # command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    #     env_file:
+    #         - .env
+    #     ports:
+    #         - "5432:5432"
 
     caddy:
         image: caddy:alpine
@@ -33,7 +24,27 @@ services:
             - caddy_data:/data
             - caddy_config:/config
 
+    olive:
+        build:
+            context: .
+            dockerfile: ./docker/server/Dockerfile
+        container_name: olive
+        env_file:
+            - .env
+        ports:
+            - 3000:3000
+        develop:
+            watch:
+                - action: sync+restart
+                  path: ./
+                  target: /app/
+                - action: rebuild
+                  path: ./pyproject.toml
+                  target: /app/pyproject.toml
+
 volumes:
+    # olive_db:
+    #     external: true
     caddy_data:
     caddy_config:
 

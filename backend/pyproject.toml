@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "replit-vocode-telephony-server-11ai"
+name = "olive-ai-backend"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Olive AI backend"
+authors = ["dhruvmisra <dhruvmisra@live.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.11"
@@ -10,7 +10,6 @@ numpy = "^1.22.2"
 urllib3 = "^1.26.12"
 pydub = "0.25.1"
 twilio = "8.2.0"
-pyngrok = "^7.1.6"
 vocode = "0.1.114a0"
 sentry-sdk = {extras = ["fastapi"], version = "^2.7.1"}
 google-auth = "^2.31.0"
@@ -23,9 +22,66 @@ langchain-google-genai = "^1.0.7"
 langchain-google-vertexai = "^1.0.6"
 langgraph = "^0.1.8"
 langchain-groq = "^0.1.6"
+alembic = "^1.13.2"
+asgiref = "^3.8.1"
+colorama = "^0.4.6"
+coloredlogs = "^15.0.1"
+psycopg2-binary = "^2.9.9"
+sqlalchemy = "^2.0.31"
+asyncpg = "^0.29.0"
+httpx = "^0.27.0"
+secure = "^0.3.0"
+uvicorn = {extras = ["standard"], version = "^0.30.1"}
+celery = {extras = ["sqs"], version = "^5.4.0"}
+gunicorn = "^22.0.0"
+orjson = "^3.10.6"
+asgi-correlation-id = "^4.3.1"
+ecs-logging = "^2.2.0"
+greenlet = "^3.0.3"
+supabase = "^2.5.3"
+pyjwt = {extras = ["crypto"], version = "^2.8.0"}
 
-[tool.poetry.dev-dependencies]
-debugpy = "^1.6.2"
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+ruff = "^0.5.2"
+mypy = "^1.10.1"
+
+[tool.ruff]
+src = ["src", "test"]
+target-version = "py310"
+select = ["E", "F", "W", "I"]
+ignore = ["F403", "F405", "E501", "E711"]
+line-length = 99
+ignore-init-module-imports = true
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".ruff_cache",
+    "__pypackages__",
+    "__init__.py",
+    "venv",
+    "migrations",
+]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[tool.black]
+line-length = 99
+target-version = ['py310']
+
+[tool.mypy]
+mypy_path = "src"
+files = "src/**/*.py,test/**/*.py"
+namespace_packages = true
+explicit_package_bases = true
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
