@@ -47,9 +47,8 @@ export type CallFormValues = z.infer<typeof callSchema>;
 
 const breadcrumbItems = [{ title: "Test call", link: "/test-call" }];
 
-export default function page() {
+export default function Page() {
     const { toast } = useToast();
-
     const supabase = createClient();
     const [loading, setLoading] = useState(false);
 
