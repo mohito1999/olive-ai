@@ -5,11 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from vocode.streaming.models.agent import (
     AzureOpenAIConfig,
     ChatGPTAgentConfig,
+    GroqAgentConfig,
 )
 from vocode.streaming.models.client_backend import OutputAudioConfig
 from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
 from vocode.streaming.models.transcriber import (
+    DEFAULT_AUDIO_ENCODING,
+    DEFAULT_CHUNK_SIZE,
     DEFAULT_SAMPLING_RATE,
     DeepgramTranscriberConfig,
 )
@@ -24,9 +27,10 @@ from schemas import OutboundCallRequest
 from streaming.telephony.constants import EXOTEL_AUDIO_ENCODING, EXOTEL_CHUNK_SIZE
 from streaming.telephony.conversation.outbound_call import CustomOutboundCall
 from util.config_manager import CONFIG_MANAGER
-from util.telephony_server import EXOTEL_CONFIG
+from util.telephony_server import EXOTEL_CONFIG, TWILIO_CONFIG
 
 router = APIRouter()
+
 
 @router.post("/outbound")
 async def start_outbound_call(
@@ -57,6 +61,8 @@ async def start_outbound_call(
         language="hi",
         model="nova-2",
         sampling_rate=DEFAULT_SAMPLING_RATE.value,
+        # audio_encoding=DEFAULT_AUDIO_ENCODING,
+        # chunk_size=DEFAULT_CHUNK_SIZE,
         audio_encoding=EXOTEL_AUDIO_ENCODING,
         chunk_size=EXOTEL_CHUNK_SIZE,
         endpointing_config=DeepgramEndpointingConfig(),
@@ -64,12 +70,25 @@ async def start_outbound_call(
     synth_config = GoogleSynthesizerConfig.from_output_audio_config(
         output_audio_config=OutputAudioConfig(
             sampling_rate=DEFAULT_SAMPLING_RATE.value,
+            # audio_encoding=DEFAULT_AUDIO_ENCODING,
             audio_encoding=EXOTEL_AUDIO_ENCODING,
         ),
         language_code="hi-IN",
         voice_name=voice,
         pitch=-10.0,
+        speaking_rate=1.0,
     )
+
+    # agent_config = GroqAgentConfig(
+    #     model_name="llama3-8b-8192",
+    #     initial_message=BaseMessage(text=initial_message),
+    #     prompt_preamble=prompt,
+    #     temperature=0.5,
+    #     interrupt_sensitivity=interrupt_sensitivity,
+    #     end_conversation_on_goodbye=True,
+    #     goodbye_phrases=["bye"],
+    #     # actions=[LogToConsoleActionConfig(type="action_log_message_to_console")],
+    # )
 
     agent_config = ChatGPTAgentConfig(
         initial_message=BaseMessage(text=initial_message),
@@ -93,7 +112,6 @@ async def start_outbound_call(
     telephony_params = {
         "CustomField": conversation_id,
     }
-    log.info(f"Conversation ID: {conversation_id}")
 
     log.info(f"Starting outbound call to {mobile_number}")
     outbound_call = CustomOutboundCall(
@@ -105,6 +123,7 @@ async def start_outbound_call(
         agent_config=agent_config,
         synthesizer_config=synth_config,
         telephony_config=EXOTEL_CONFIG,
+        # telephony_config=TWILIO_CONFIG,
         telephony_params=telephony_params,
         conversation_id=conversation_id,
     )

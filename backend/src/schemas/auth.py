@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from pydantic import EmailStr, Field
 
@@ -15,7 +16,15 @@ class RegisterRequest(BaseSchema):
     organization_id: str
 
 
-class LoginRquest(BaseSchema):
+class LoginRequest(BaseSchema):
     email: EmailStr
-    password: str = Field(..., min_length=8)
+    password: str
+
+
+class LoginResponse(BaseSchema):
+    id: UUID
+    name: str
+    access_token: str
+    expires_in: int
+    refresh_token: str
 

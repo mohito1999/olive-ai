@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: afee87188d2e
+Revision ID: 6e2fdb99b04d
 Revises: 5ef9c0e64733
-Create Date: 2024-07-17 17:30:56.397164
+Create Date: 2024-07-19 01:08:51.764969
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'afee87188d2e'
+revision: str = '6e2fdb99b04d'
 down_revision: Union[str, None] = '5ef9c0e64733'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,56 +25,92 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('config', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('created_by', sa.String(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('updated_by', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
+    )
+    op.execute(
+        """
+        CREATE OR REPLACE TRIGGER set_timestamp_agent
+        BEFORE UPDATE ON agent
+        FOR EACH ROW
+        EXECUTE FUNCTION trigger_set_timestamp_modify();
+        """
     )
     op.create_table('synthesizer',
     sa.Column('id', sa.String(), server_default=sa.text("id_generator('synthesizer')"), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('config', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('created_by', sa.String(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('updated_by', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
+    )
+    op.execute(
+        """
+        CREATE OR REPLACE TRIGGER set_timestamp_synthesizer
+        BEFORE UPDATE ON synthesizer
+        FOR EACH ROW
+        EXECUTE FUNCTION trigger_set_timestamp_modify();
+        """
     )
     op.create_table('telephony_service',
     sa.Column('id', sa.String(), server_default=sa.text("id_generator('telephony-service')"), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('config', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('created_by', sa.String(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('updated_by', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
+    )
+    op.execute(
+        """
+        CREATE OR REPLACE TRIGGER set_timestamp_telephony_service
+        BEFORE UPDATE ON telephony_service
+        FOR EACH ROW
+        EXECUTE FUNCTION trigger_set_timestamp_modify();
+        """
     )
     op.create_table('transcriber',
     sa.Column('id', sa.String(), server_default=sa.text("id_generator('transcriber')"), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('config', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('created_by', sa.String(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('current_timestamp_utc()'), nullable=True),
     sa.Column('updated_by', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
+    )
+    op.execute(
+        """
+        CREATE OR REPLACE TRIGGER set_timestamp_transcriber
+        BEFORE UPDATE ON transcriber
+        FOR EACH ROW
+        EXECUTE FUNCTION trigger_set_timestamp_modify();
+        """
     )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
+    op.execute('DROP TRIGGER IF EXISTS set_timestamp_transcriber on transcriber')
     op.drop_table('transcriber')
+    op.execute('DROP TRIGGER IF EXISTS set_timestamp_telephony_service, on telephony_service')
     op.drop_table('telephony_service')
+    op.execute('DROP TRIGGER IF EXISTS set_timestamp_synthesizer on synthesizer')
     op.drop_table('synthesizer')
+    op.execute('DROP TRIGGER IF EXISTS set_timestamp_agent on agent')
     op.drop_table('agent')
     # ### end Alembic commands ###

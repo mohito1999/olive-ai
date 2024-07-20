@@ -1,49 +1,47 @@
 import logging
-from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
 import os
-import uvicorn
+from typing import Optional
+
 import sentry_sdk
-
-# DO NOT REMOVE
-import llama_monkey_patch
-
+import uvicorn
+from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
+from src.custom_agent import LogToConsoleActionConfig
+from src.custom_telephony_server import CustomTelephonyServer
+from src.streaming.models.telephony import ExotelConfig
+from src.streaming.telephony.constants import EXOTEL_AUDIO_ENCODING, EXOTEL_CHUNK_SIZE
+from src.streaming.telephony.conversation.outbound_call import CustomOutboundCall
+from src.streaming.telephony.server.base import ExotelInboundCallConfig
+from vocode.logging import configure_json_logging, configure_pretty_logging
 from vocode.streaming.models.agent import (
-    LangchainAgentConfig,
     AnthropicAgentConfig,
+    AzureOpenAIConfig,
+    ChatGPTAgentConfig,
     GroqAgentConfig,
     InterruptSensitivity,
-    ChatGPTAgentConfig,
-    AzureOpenAIConfig,
+    LangchainAgentConfig,
 )
 from vocode.streaming.models.client_backend import OutputAudioConfig
 from vocode.streaming.models.message import BaseMessage
+from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
 from vocode.streaming.models.telephony import TwilioConfig
 from vocode.streaming.models.transcriber import (
-    DeepgramTranscriberConfig,
-    DEFAULT_SAMPLING_RATE,
     DEFAULT_AUDIO_ENCODING,
     DEFAULT_CHUNK_SIZE,
+    DEFAULT_SAMPLING_RATE,
+    DeepgramTranscriberConfig,
 )
-from vocode.streaming.transcriber.deepgram_transcriber import DeepgramEndpointingConfig
 from vocode.streaming.telephony.config_manager.in_memory_config_manager import (
     InMemoryConfigManager,
 )
-from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
+from vocode.streaming.transcriber.deepgram_transcriber import DeepgramEndpointingConfig
 from vocode.streaming.utils import create_conversation_id
-from vocode.logging import configure_pretty_logging, configure_json_logging
 
-from custom_telephony_server import CustomTelephonyServer
-from custom_agent import LogToConsoleActionConfig
-from streaming.models.telephony import ExotelConfig
-from streaming.telephony.conversation.outbound_call import CustomOutboundCall
-from streaming.telephony.server.base import ExotelInboundCallConfig
-from streaming.telephony.constants import EXOTEL_AUDIO_ENCODING, EXOTEL_CHUNK_SIZE
-
+# DO NOT REMOVE
+import llama_monkey_patch
 
 DEPLOYED_ENVIRONMENTS = ["production", "staging"]
 ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")

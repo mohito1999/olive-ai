@@ -60,4 +60,4 @@ class ForbiddenException(ApplicationException):
 
     status_code = status.HTTP_403_FORBIDDEN
     error_code = "Forbidden"
-    detail = "The access to the resource is forbidden"
+    detail = "Action not allowed"

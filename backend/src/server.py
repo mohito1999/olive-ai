@@ -37,7 +37,12 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "https://app.oliveai.in", "https://olive-ai-git-next-js-mohit-motwanis-projects.vercel.app"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://app.oliveai.in",
+        "https://olive-ai-git-next-js-mohit-motwanis-projects.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["OPTIONS", "GET", "POST", "PATCH", "PUT", "DELETE"],
     allow_headers=["Content-Type", "Authorization", "Accept", "Referer", "User-Agent"],
