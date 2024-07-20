@@ -40,7 +40,7 @@ const defaultValues = {
     prompt: "",
     initial_message: "",
     interrupt_sensitivity: "low",
-    voice: "hi-IN-Wavenet-B"
+    voice: "hi-IN-Standard-B"
 };
 
 export type CallFormValues = z.infer<typeof callSchema>;
@@ -116,7 +116,6 @@ export default function Page() {
                                             <Input
                                                 disabled={loading}
                                                 type="tel"
-                                                pattern="[0-9]{10}"
                                                 placeholder="9876543210"
                                                 {...field}
                                             />

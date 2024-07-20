@@ -39,13 +39,6 @@ export default function AuthenticationPage() {
                     Olive AI
                 </div>
                 <div className="relative z-20 mt-auto">
-                    <blockquote className="space-y-2">
-                        <p className="text-lg">
-                            &ldquo;This library has saved me countless hours of work and helped me
-                            deliver stunning designs to my clients faster than ever before.&rdquo;
-                        </p>
-                        <footer className="text-sm">Sofia Davis</footer>
-                    </blockquote>
                 </div>
             </div>
             <div className="flex h-full items-center p-4 lg:p-8">
@@ -53,7 +46,7 @@ export default function AuthenticationPage() {
                     <div className="flex flex-col space-y-2 text-center">
                         <h1 className="text-2xl font-semibold tracking-tight">Login to Olive AI</h1>
                         <p className="text-sm text-muted-foreground">
-                            Enter your email and password to continue
+                            Access to Olive AI is invite-only. <a href="#" target="_blonk" className="underline underline-offset-4 hover:text-primary">Join waitlist</a>.
                         </p>
                     </div>
 

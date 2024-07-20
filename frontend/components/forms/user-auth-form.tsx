@@ -31,14 +31,9 @@ export default function UserAuthForm() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const defaultValues = {
-        email: "test@test.com",
-        password: "test12345"
-    };
 
     const form = useForm<UserFormValue>({
-        resolver: zodResolver(formSchema),
-        defaultValues
+        resolver: zodResolver(formSchema)
     });
 
     const onSubmit = async (data: UserFormValue) => {
@@ -52,7 +47,7 @@ export default function UserAuthForm() {
             setError(error.message);
             setLoading(false);
         } else {
-            router.push(callbackUrl || "/")
+            router.push(callbackUrl || "/");
         }
     };
 
