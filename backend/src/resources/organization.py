@@ -1,11 +1,16 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth import get_current_admin_user
 from exceptions import (
     ApplicationException,
+    BadRequestException,
     InternalServerException,
+    NotFoundException,
+    RecordIntegrityException,
+    RecordNotFoundException,
 )
 from log import log
 from models import get_db
@@ -14,6 +19,7 @@ from schemas import (
     CreateOrganizationRequest,
     OrganizationDBInputSchema,
     OrganizationResponse,
+    UpdateOrganizationRequest,
 )
 
 router = APIRouter()
@@ -21,16 +27,20 @@ router = APIRouter()
 
 @router.post("", response_model=OrganizationResponse, status_code=201)
 async def create_organization(
-    request: CreateOrganizationRequest,
+    payload: CreateOrganizationRequest,
+    current_user: dict = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     try:
-        log.info(f"Creating organization with name: {request.name}")
+        log.info(f"Creating organization with name: '{payload.name}'")
         data = OrganizationDBInputSchema(
-            **{**request.dict(), "updated_by": "test", "created_by": "test"}
+            **{**payload.dict(), "updated_by": current_user_id, "created_by": current_user_id}
         )
-        org = await OrganizationRepository(db).create(data)
-        return OrganizationResponse(**org.dict())
+        organization = await OrganizationRepository(db).create(data)
+        return OrganizationResponse(**organization.dict())
+    except RecordIntegrityException as e:
+        raise BadRequestException(e, detail="Organization name already exists")
     except ApplicationException as e:
         raise e
     except Exception as e:
@@ -40,6 +50,7 @@ async def create_organization(
 @router.get("", response_model=List[OrganizationResponse])
 async def list_organizations(
     db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     try:
         log.info("Listing organizations")
@@ -51,58 +62,61 @@ async def list_organizations(
         raise InternalServerException(e)
 
 
-# @router.get("/{organization_id}", response_model=OrganizationResponse)
-# async def get_organization(
-#     organization_id: str,
-#     user_id: str = Header(..., alias="x-user-id"),
-# ):
-#     try:
-#         log.info(
-#             f"Getting organization for user_id: {user_id}, organization_id: {organization_id}"
-#         )
-#         item = OrganizationRepository().get(user_id, organization_id)
-#         return OrganizationResponse(**item.dict())
-#     except RecordNotFoundException as e:
-#         raise NotFoundException(e)
-#     except ApplicationException as e:
-#         raise e
-#     except Exception as e:
-#         raise InternalServerException(e)
-#
-#
-# @router.patch("/{organization_id}", response_model=OrganizationResponse)
-# async def update_organization(
-#     organization_id: str,
-#     request: UpdateOrganizationRequest,
-#     user_id: str = Header(..., alias="x-user-id"),
-# ):
-#     try:
-#         log.info(
-#             f"Updating organization for user_id: {user_id}, organization_id: {organization_id}"
-#         )
-#         item = OrganizationRepository().update(request, user_id, organization_id)
-#         return OrganizationResponse(**item.dict())
-#     except RecordNotFoundException as e:
-#         raise NotFoundException(e)
-#     except ApplicationException as e:
-#         raise e
-#     except Exception as e:
-#         raise InternalServerException(e)
-#
-#
-# @router.delete("/{organization_id}", status_code=204)
-# async def delete_organization(
-#     organization_id: str,
-#     user_id: str = Header(..., alias="x-user-id"),
-# ):
-#     try:
-#         log.info(
-#             f"Deleting organization for user_id: {user_id}, organization_id: {organization_id}"
-#         )
-#         OrganizationRepository().delete(user_id, organization_id)
-#     except RecordNotFoundException as e:
-#         raise NotFoundException(e)
-#     except ApplicationException as e:
-#         raise e
-#     except Exception as e:
-#         raise InternalServerException(e)
+@router.get("/{organization_id}", response_model=OrganizationResponse)
+async def get_organization(
+    organization_id: str,
+    current_user: dict = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        log.info(f"Getting organization for organization_id: '{organization_id}'")
+        item = await OrganizationRepository(db).get(id=organization_id)
+        return OrganizationResponse(**item.dict())
+    except RecordNotFoundException as e:
+        raise NotFoundException(e)
+    except ApplicationException as e:
+        raise e
+    except Exception as e:
+        raise InternalServerException(e)
+
+
+@router.patch("/{organization_id}", response_model=OrganizationResponse)
+async def update_organization(
+    organization_id: str,
+    payload: UpdateOrganizationRequest,
+    current_user: dict = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    current_user_id = current_user.get("sub")
+    try:
+        log.info(f"Updating organization for organization_id: '{organization_id}'")
+        organization = await OrganizationRepository(db).update(
+            values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
+            id=organization_id,
+        )
+        return OrganizationResponse(**organization.dict())
+    except RecordNotFoundException as e:
+        raise NotFoundException(e)
+    except RecordIntegrityException as e:
+        raise BadRequestException(e, detail="Organization name already exists")
+    except ApplicationException as e:
+        raise e
+    except Exception as e:
+        raise InternalServerException(e)
+
+
+@router.delete("/{organization_id}", status_code=204)
+async def delete_organization(
+    organization_id: str,
+    current_user: dict = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        log.info(f"Deleting organization for organization_id: '{organization_id}'")
+        await OrganizationRepository(db).delete(id=organization_id)
+    except RecordNotFoundException as e:
+        raise NotFoundException(e)
+    except ApplicationException as e:
+        raise e
+    except Exception as e:
+        raise InternalServerException(e)

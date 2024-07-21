@@ -7,4 +7,7 @@ from .campaign import *
 from .call import *
 # from .customer import *
 from .organization import *
+from .transcriber import *
+from .synthesizer import *
+from .telephony_service import *
 from .user import *

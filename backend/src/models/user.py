@@ -14,13 +14,15 @@ class User(Base, AuditMixin, metaclass=BaseMeta):
 
     id = Column(
         UUID,
+        # ForeignKey("auth.users.id", ondelete="CASCADE"),
         nullable=False,
-        primary_key=True,  # ForeignKey("auth.users.id", ondelete="CASCADE")
+        primary_key=True,
     )
     name = Column(String, nullable=True)
     email = Column(String, nullable=True)
     mobile_number = Column(String, nullable=True)
-    auth_provider = Column(String, nullable=False, server_default=text(AuthProvider.SUPABASE.value))
+    auth_provider = Column(
+        String, nullable=False, server_default=text(AuthProvider.SUPABASE.value)
+    )
     role = Column(String, nullable=False, default=UserRole.DEFAULT)
     organization_id = Column(String, ForeignKey("organization.id"), nullable=False)
-

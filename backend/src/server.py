@@ -15,7 +15,17 @@ from custom_agent import LogToConsoleActionConfig
 from custom_telephony_server import CustomTelephonyServer
 from exceptions import add_exception_handlers
 from log import log
-from resources import agent, auth, health, organization, outbound_call
+from resources import (
+    agent,
+    auth,
+    campaign,
+    health,
+    organization,
+    outbound_call,
+    synthesizer,
+    telephony_service,
+    transcriber,
+)
 from streaming.telephony.server.base import ExotelInboundCallConfig
 from util.config_manager import CONFIG_MANAGER
 from util.security_headers import add_security_headers
@@ -74,12 +84,16 @@ telephony_server = CustomTelephonyServer(
         )
     ],
 )
-app.include_router(telephony_server.get_router())
+# app.include_router(telephony_server.get_router())
 
 api_router = APIRouter(prefix="/v1")
 api_router.include_router(health.router, prefix="/health", tags=["health"])
 api_router.include_router(organization.router, prefix="/organizations", tags=["organization"])
 api_router.include_router(agent.router, prefix="/agents", tags=["agent"])
+api_router.include_router(transcriber.router, prefix="/transcribers", tags=["transcriber"])
+api_router.include_router(synthesizer.router, prefix="/synthesizers", tags=["synthesizer"])
+api_router.include_router(telephony_service.router, prefix="/telephony-services", tags=["telephony_service"])
+api_router.include_router(campaign.router, prefix="/campaigns", tags=["campaign"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(outbound_call.router, prefix="/calls", tags=["call"])
 app.include_router(api_router)

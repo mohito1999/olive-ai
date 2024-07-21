@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .base import BaseSchema
 
 
@@ -35,4 +37,17 @@ class CreateOrganizationRequest(BaseSchema):
 
 class OrganizationResponse(CreateOrganizationRequest):
     id: str
+
+
+class UpdateOrganizationRequest(BaseSchema):
+    name: Optional[str] = None
+    telephony_service_id: Optional[str] = None
+    telephony_service_config: Optional[dict] = None
+    transcriber_id: Optional[str] = None
+    transcriber_config: Optional[dict] = None
+    agent_id: Optional[str] = None
+    agent_config: Optional[dict] = None
+    synthesizer_id: Optional[str] = None
+    synthesizer_config: Optional[dict] = None
+    credits: Optional[int] = None
 
