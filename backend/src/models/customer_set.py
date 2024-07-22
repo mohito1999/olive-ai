@@ -19,5 +19,6 @@ class CustomerSet(Base, AuditMixin, metaclass=BaseMeta):
     name = Column(String, nullable=True)
     description = Column(String, nullable=True)
     type = Column(String, nullable=False)
+    status = Column(String, nullable=False)
     url = Column(String, nullable=True)
 

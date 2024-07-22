@@ -2,5 +2,9 @@ from enum import Enum
 
 
 class CustomerSetType(str, Enum):
-    CSV_UPLOAD = "CSV_UPLOAD"
+    FILE = "FILE"
+
+class CustomerSetStatus(str, Enum):
+    UPLOADED = "UPLOADED"
+    PROCESSED = "PROCESSED"
 

@@ -20,5 +20,5 @@ class Customer(Base, AuditMixin, metaclass=BaseMeta):
     customer_set_id = Column(String, ForeignKey("customer_set.id"), nullable=False)
     name = Column(String, nullable=False)
     mobile_number = Column(String, nullable=False)
-    variables = Column(JSONB, nullable=False, default={})
+    metadata = Column(JSONB, nullable=False, default={})
 

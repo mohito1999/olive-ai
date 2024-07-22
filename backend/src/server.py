@@ -11,7 +11,6 @@ import config
 # DO NOT REMOVE
 import llama_monkey_patch
 from constants import DEFAULT_PROMPT
-from custom_agent import LogToConsoleActionConfig
 from custom_telephony_server import CustomTelephonyServer
 from exceptions import add_exception_handlers
 from log import log
@@ -19,6 +18,7 @@ from resources import (
     agent,
     auth,
     campaign,
+    customer_set,
     health,
     organization,
     outbound_call,
@@ -94,6 +94,7 @@ api_router.include_router(transcriber.router, prefix="/transcribers", tags=["tra
 api_router.include_router(synthesizer.router, prefix="/synthesizers", tags=["synthesizer"])
 api_router.include_router(telephony_service.router, prefix="/telephony-services", tags=["telephony_service"])
 api_router.include_router(campaign.router, prefix="/campaigns", tags=["campaign"])
+api_router.include_router(customer_set.router, prefix="/customer-sets", tags=["customer-set"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(outbound_call.router, prefix="/calls", tags=["call"])
 app.include_router(api_router)

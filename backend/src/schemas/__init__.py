@@ -6,6 +6,7 @@ from .agent import *
 from .campaign import *
 from .call import *
 # from .customer import *
+from .customer_set import *
 from .organization import *
 from .transcriber import *
 from .synthesizer import *

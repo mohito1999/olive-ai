@@ -6,13 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth import get_current_user
 from exceptions import (
     ApplicationException,
+    BadRequestException,
     InternalServerException,
     NotFoundException,
     RecordNotFoundException,
 )
 from log import log
 from models import get_db
-from repositories import CampaignRepository
+from repositories import CampaignRepository, OrganizationRepository
 from schemas import (
     CampaignDBInputSchema,
     CampaignResponse,
@@ -30,8 +31,19 @@ async def create_campaign(
     db: AsyncSession = Depends(get_db),
 ):
     current_user_id = current_user.get("sub")
+    current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
+
     try:
         log.info(f"Creating campaign with name: '{payload.name}'")
+        if payload.organization_id != current_user_organization_id:
+            raise BadRequestException(f"User does not belong to organization with id: '{payload.organization_id}'")
+
+        try:
+            await OrganizationRepository(db).get(id=payload.organization_id)
+            log.info(f"Organization with id: '{payload.organization_id}' exists")
+        except RecordNotFoundException:
+            raise NotFoundException("Organization not found")
+
         data = CampaignDBInputSchema(
             **{**payload.dict(), "updated_by": current_user_id, "created_by": current_user_id}
         )
