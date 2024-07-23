@@ -4,6 +4,7 @@ from .error import *
 from .health import *
 from .agent import *
 from .campaign import *
+from .campaign_customer_set import *
 from .call import *
 from .customer import *
 from .customer_set import *

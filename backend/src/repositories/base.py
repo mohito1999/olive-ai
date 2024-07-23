@@ -64,6 +64,7 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
                     q = q.on_conflict_do_nothing(**on_conflict_args)
 
             result: Result = await self._db_session.execute(q)
+            await self._db_session.commit()
             return result
         except IntegrityError as e:
             raise RecordIntegrityException(e)

@@ -9,12 +9,14 @@ from exceptions import (
     BadRequestException,
     InternalServerException,
     NotFoundException,
+    RecordIntegrityException,
     RecordNotFoundException,
 )
 from log import log
 from models import get_db
-from repositories import CampaignRepository, OrganizationRepository
+from repositories import CampaignCustomerSetRepository, CampaignRepository, OrganizationRepository
 from schemas import (
+    CampaignCustomerSetDBInputSchema,
     CampaignDBInputSchema,
     CampaignResponse,
     CreateCampaignRequest,
@@ -36,18 +38,38 @@ async def create_campaign(
     try:
         log.info(f"Creating campaign with name: '{payload.name}'")
         if payload.organization_id != current_user_organization_id:
-            raise BadRequestException(f"User does not belong to organization with id: '{payload.organization_id}'")
+            raise BadRequestException(
+                detail=f"User does not belong to organization with id: '{payload.organization_id}'"
+            )
 
         try:
             await OrganizationRepository(db).get(id=payload.organization_id)
             log.info(f"Organization with id: '{payload.organization_id}' exists")
         except RecordNotFoundException:
-            raise NotFoundException("Organization not found")
+            raise NotFoundException(detail="Organization not found")
 
         data = CampaignDBInputSchema(
             **{**payload.dict(), "updated_by": current_user_id, "created_by": current_user_id}
         )
         campaign = await CampaignRepository(db).create(data)
+
+        try:
+            log.info(f"Creating campaign customer set for campaign_id: '{campaign.id}'")
+            if payload.customer_sets is not None:
+                entries = [
+                    CampaignCustomerSetDBInputSchema(
+                        campaign_id=campaign.id,
+                        customer_set_id=customer_set_id,
+                        created_by=current_user_id,
+                        updated_by=current_user_id,
+                    )
+                    for customer_set_id in payload.customer_sets
+                ]
+                if len(entries) > 0:
+                    await CampaignCustomerSetRepository(db).bulk_create(entries)
+        except RecordIntegrityException as e:
+            raise BadRequestException(e, detail="Customer set not found")
+
         return CampaignResponse(**campaign.dict())
     except ApplicationException as e:
         raise e
@@ -98,8 +120,30 @@ async def update_campaign(
     current_user_id = current_user.get("sub")
     try:
         log.info(f"Updating campaign for campaign_id: '{campaign_id}'")
+
+        if payload.customer_sets is not None:
+            await CampaignCustomerSetRepository(db).delete(
+                campaign_id=campaign_id, permanent_operation=True
+            )
+            entries = [
+                CampaignCustomerSetDBInputSchema(
+                    campaign_id=campaign_id,
+                    customer_set_id=customer_set_id,
+                    created_by=current_user_id,
+                    updated_by=current_user_id,
+                )
+                for customer_set_id in payload.customer_sets
+            ]
+            if len(entries) > 0:
+                await CampaignCustomerSetRepository(db).bulk_create(entries)
+
         campaign = await CampaignRepository(db).update(
-            values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
+            values={
+                **{
+                    **payload.dict(exclude_none=True, exclude="customer_sets"),
+                    "updated_by": current_user_id,
+                }
+            },
             id=campaign_id,
         )
         return CampaignResponse(**campaign.dict())

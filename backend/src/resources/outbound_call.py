@@ -79,7 +79,7 @@ async def start_outbound_call(
         language_code="hi-IN",
         voice_name=voice,
         pitch=-10.0,
-        speaking_rate=1.0,
+        speaking_rate=1.1,
     )
 
     # agent_config = GroqAgentConfig(

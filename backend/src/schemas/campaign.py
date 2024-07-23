@@ -3,6 +3,7 @@ from typing import Optional
 from constants import CampaignStatus, CampaignType
 
 from .base import BaseSchema
+from .customer_set import CustomerSetDBSchema
 
 
 class CampaignDBInputSchema(BaseSchema):
@@ -27,8 +28,12 @@ class CampaignDBInputSchema(BaseSchema):
     updated_by: str
 
 
-class CampaignDBSchema(CampaignDBInputSchema):
+class CampaignDBNoRelSchema(CampaignDBInputSchema):
     id: str
+
+
+class CampaignDBSchema(CampaignDBNoRelSchema):
+    customer_sets: list[CustomerSetDBSchema]
 
 
 class CreateCampaignRequest(BaseSchema):
@@ -49,10 +54,12 @@ class CreateCampaignRequest(BaseSchema):
     agent_config: Optional[dict] = None
     synthesizer_id: Optional[str] = None
     synthesizer_config: Optional[dict] = None
+    customer_sets: Optional[list[str]] = None
 
 
 class CampaignResponse(CreateCampaignRequest):
     id: str
+    customer_sets: list[CustomerSetDBSchema]
 
 
 class UpdateCampaignRequest(BaseSchema):
@@ -72,3 +79,4 @@ class UpdateCampaignRequest(BaseSchema):
     agent_config: Optional[dict] = None
     synthesizer_id: Optional[str] = None
     synthesizer_config: Optional[dict] = None
+    customer_sets: Optional[list[str]] = None

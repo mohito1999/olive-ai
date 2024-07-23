@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
-
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
 
 from constants import CampaignStatus, CampaignType
 
 from .audit import AuditMixin
 from .base import Base, BaseMeta
+from .campaign_customer_set import CampaignCustomerSet
 
 
 class Campaign(Base, AuditMixin, metaclass=BaseMeta):
@@ -37,4 +37,10 @@ class Campaign(Base, AuditMixin, metaclass=BaseMeta):
     agent_config = Column(JSONB, nullable=True)
     synthesizer_id = Column(String, ForeignKey("synthesizer.id"), nullable=True)
     synthesizer_config = Column(JSONB, nullable=True)
+
+    customer_sets = relationship(
+        "CustomerSet",
+        secondary=CampaignCustomerSet.__table__,
+        lazy="selectin",
+    )
 
