@@ -29,6 +29,7 @@ const callSchema = z.object({
     prompt: z.string(),
     initial_message: z.string(),
     interrupt_sensitivity: z.string(),
+    synthesizer: z.string(),
     voice: z.string().min(2, { message: "Please enter a valid voice" })
 });
 
@@ -40,6 +41,7 @@ const defaultValues = {
     prompt: "",
     initial_message: "",
     interrupt_sensitivity: "low",
+    synthesizer: "google",
     voice: "hi-IN-Standard-B"
 };
 
@@ -212,14 +214,13 @@ export default function Page() {
                             />
                             <FormField
                                 control={form.control}
-                                name="interrupt_sensitivity"
+                                name="synthesizer"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Interrupt Sensitivity</FormLabel>
+                                        <FormLabel>Synthesizer provider</FormLabel>
                                         <FormControl>
                                             <Input
                                                 disabled={loading}
-                                                placeholder="low"
                                                 {...field}
                                             />
                                         </FormControl>
@@ -237,6 +238,23 @@ export default function Page() {
                                             <Input
                                                 disabled={loading}
                                                 placeholder="hi-IN-Wavenet-B"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="interrupt_sensitivity"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Interrupt Sensitivity</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                disabled={loading}
+                                                placeholder="low"
                                                 {...field}
                                             />
                                         </FormControl>
