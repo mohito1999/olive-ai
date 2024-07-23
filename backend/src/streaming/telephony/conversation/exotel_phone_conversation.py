@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 import json
 import os
@@ -6,7 +8,6 @@ from typing import Optional
 
 from fastapi import WebSocket
 from loguru import logger
-
 from vocode.streaming.agent.abstract_factory import AbstractAgentFactory
 from vocode.streaming.models.agent import AgentConfig
 from vocode.streaming.models.events import PhoneCallConnectedEvent
@@ -24,8 +25,10 @@ from vocode.streaming.transcriber.abstract_factory import AbstractTranscriberFac
 from vocode.streaming.utils.events_manager import EventsManager
 
 from streaming.models.telephony import ExotelConfig
-from streaming.output_device.exotel_output_device import ExotelOutputDevice, ChunkFinishedMarkMessage
-
+from streaming.output_device.exotel_output_device import (
+    ChunkFinishedMarkMessage,
+    ExotelOutputDevice,
+)
 from streaming.telephony.client.exotel_client import ExotelClient
 from streaming.utils.state_manager import ExotelPhoneConversationStateManager
 

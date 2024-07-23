@@ -207,8 +207,7 @@ class CustomTelephonyServer(TelephonyServer):
                 transcriber_config=outbound_call_config.transcriber_config
                 or inbound_call_config.transcriber_config
                 or ExotelCallConfig.default_transcriber_config(),
-                agent_config=outbound_call_config.agent_config
-                or inbound_call_config.agent_config,
+                agent_config=outbound_call_config.agent_config or inbound_call_config.agent_config,
                 synthesizer_config=outbound_call_config.synthesizer_config
                 or inbound_call_config.synthesizer_config
                 or ExotelCallConfig.default_synthesizer_config(),
@@ -268,9 +267,7 @@ class CustomTelephonyServer(TelephonyServer):
             )
             return partial(exotel_route, inbound_call_config.exotel_config)
         else:
-            raise ValueError(
-                f"Unknown inbound call config type {type(inbound_call_config)}"
-            )
+            raise ValueError(f"Unknown inbound call config type {type(inbound_call_config)}")
 
     # async def end_outbound_call(self, conversation_id: str):
     #     # TODO validation via twilio_client

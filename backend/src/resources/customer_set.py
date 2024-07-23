@@ -14,6 +14,7 @@ from exceptions import (
     NotFoundException,
     RecordNotFoundException,
 )
+from jobs import process_csv_file_task
 from log import log
 from models import get_db
 from repositories import CustomerSetRepository, OrganizationRepository
@@ -21,6 +22,7 @@ from schemas import (
     CreateCustomerSetRequest,
     CustomerSetDBInputSchema,
     CustomerSetResponse,
+    ProcessCustomerSetResponse,
     UpdateCustomerSetRequest,
 )
 
@@ -66,7 +68,7 @@ async def create_customer_set(
 
         customer_set = await CustomerSetRepository(db).create(data)
 
-        if file:
+        if file.size > 0:
             if file.content_type != "text/csv":
                 raise BadRequestException(detail="Only CSV files are allowed")
 
@@ -84,6 +86,7 @@ async def create_customer_set(
                 id=customer_set.id,
             )
 
+            process_csv_file_task.apply_async((customer_set.id,))
         return CustomerSetResponse(**customer_set.dict())
     except ApplicationException as e:
         raise e
@@ -116,6 +119,28 @@ async def get_customer_set(
         log.info(f"Getting customer_set for customer_set_id: '{customer_set_id}'")
         item = await CustomerSetRepository(db).get(id=customer_set_id)
         return CustomerSetResponse(**item.dict())
+    except RecordNotFoundException as e:
+        raise NotFoundException(e)
+    except ApplicationException as e:
+        raise e
+    except Exception as e:
+        raise InternalServerException(e)
+
+
+@router.post("/{customer_set_id}/process", response_model=ProcessCustomerSetResponse)
+async def process_customer_set(
+    customer_set_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        log.info(f"Queuing processing for customer_set for customer_set_id: '{customer_set_id}'")
+        item = await CustomerSetRepository(db).get(id=customer_set_id)
+        # if item.status == CustomerSetStatus.PROCESSED.value:
+        #     raise BadRequestException(detail="Customer set has already been processed")
+
+        process_csv_file_task.apply_async((customer_set_id,))
+        return ProcessCustomerSetResponse(message="Processing queued successfully")
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

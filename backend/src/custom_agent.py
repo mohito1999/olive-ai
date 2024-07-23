@@ -1,50 +1,47 @@
+from typing import AsyncGenerator, AsyncIterator, Literal, Optional, Sequence, Type
+
 import sentry_sdk
+from langchain_core.messages.base import BaseMessage as LangchainBaseMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.tools import tool
+from langgraph.checkpoint import MemorySaver
+from langgraph.graph import END, MessagesState, StateGraph
+from langgraph.prebuilt import ToolNode
 from loguru import logger
-from typing import Literal, AsyncGenerator, AsyncIterator, Type, Optional, Sequence
+
+# from pydantic import Field
+from pydantic.v1 import BaseModel, Field
+from vocode.streaming.action.abstract_factory import AbstractActionFactory
+from vocode.streaming.action.base_action import BaseAction
+from vocode.streaming.action.default_factory import CONVERSATION_ACTIONS
 from vocode.streaming.agent.abstract_factory import AbstractAgentFactory
 from vocode.streaming.agent.anthropic_agent import AnthropicAgent
-from vocode.streaming.agent.base_agent import BaseAgent
+from vocode.streaming.agent.base_agent import BaseAgent, GeneratedResponse, StreamedResponse
 from vocode.streaming.agent.chat_gpt_agent import ChatGPTAgent
 from vocode.streaming.agent.echo_agent import EchoAgent
+from vocode.streaming.agent.groq_agent import GroqAgent
 from vocode.streaming.agent.langchain_agent import LangchainAgent
 from vocode.streaming.agent.restful_user_implemented_agent import (
     RESTfulUserImplementedAgent,
 )
-from vocode.streaming.agent.groq_agent import GroqAgent
-from vocode.streaming.models.agent import (
-    AgentConfig,
-    AnthropicAgentConfig,
-    ChatGPTAgentConfig,
-    LangchainAgentConfig,
-    GroqAgentConfig,
-    EchoAgentConfig,
-    RESTfulUserImplementedAgentConfig,
-    ChatVertexAIAgentConfig
-)
-from langchain_core.prompts import ChatPromptTemplate
-
-from vocode.streaming.agent.base_agent import GeneratedResponse, StreamedResponse
 from vocode.streaming.agent.streaming_utils import (
     collate_response_async,
     stream_response_async,
 )
-from vocode.streaming.models.message import BaseMessage, LLMToken
-from vocode.utils.sentry_utils import CustomSentrySpans, sentry_create_span
-
-from langchain_core.messages.base import BaseMessage as LangchainBaseMessage
-from langchain_core.tools import tool
-from langgraph.checkpoint import MemorySaver
-from langgraph.graph import END, StateGraph, MessagesState
-from langgraph.prebuilt import ToolNode
-
-# from pydantic import Field
-from pydantic.v1 import BaseModel, Field
-
-from vocode.streaming.action.base_action import BaseAction
 from vocode.streaming.models.actions import ActionConfig as VocodeActionConfig
 from vocode.streaming.models.actions import ActionInput, ActionOutput
-from vocode.streaming.action.default_factory import CONVERSATION_ACTIONS
-from vocode.streaming.action.abstract_factory import AbstractActionFactory
+from vocode.streaming.models.agent import (
+    AgentConfig,
+    AnthropicAgentConfig,
+    ChatGPTAgentConfig,
+    ChatVertexAIAgentConfig,
+    EchoAgentConfig,
+    GroqAgentConfig,
+    LangchainAgentConfig,
+    RESTfulUserImplementedAgentConfig,
+)
+from vocode.streaming.models.message import BaseMessage, LLMToken
+from vocode.utils.sentry_utils import CustomSentrySpans, sentry_create_span
 
 from custom_langchain import custom_init_chat_model
 
@@ -288,7 +285,7 @@ class CustomAgentFactory(AbstractAgentFactory):
                 model=agent_config.model_name,
                 model_provider=agent_config.provider,
                 temperature=agent_config.temperature,
-                max_tokens=agent_config.max_tokens,
+                # max_tokens=agent_config.max_tokens,
                 # location="asia-south1",
             )
             tools = [search_the_internet]
@@ -323,11 +320,15 @@ class CustomAgentFactory(AbstractAgentFactory):
             # checkpointer = MemorySaver()
             app = workflow.compile()
 
-            chain = prompt_template | app
+            # chain = prompt_template | app
+            chain = prompt_template | model
 
-            return CustomLangchainAgent(
+            return LangchainAgent(
                 agent_config=agent_config,
                 chain=chain,
             )
-            # return CustomLangchainAgent(agent_config=agent_config)
+            # return CustomLangchainAgent(
+            #     agent_config=agent_config,
+            #     chain=chain,
+            # )
         raise Exception("Invalid agent config", agent_config.type)

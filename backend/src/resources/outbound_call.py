@@ -6,6 +6,7 @@ from vocode.streaming.models.agent import (
     AzureOpenAIConfig,
     ChatGPTAgentConfig,
     GroqAgentConfig,
+    LangchainAgentConfig,
 )
 from vocode.streaming.models.client_backend import OutputAudioConfig
 from vocode.streaming.models.message import BaseMessage
@@ -20,7 +21,7 @@ from vocode.streaming.transcriber.deepgram_transcriber import DeepgramEndpointin
 from vocode.streaming.utils import create_conversation_id
 
 from auth import get_current_user
-from config import BASE_URL, OUTBOUND_CALLER_NUMBER
+from config import BASE_URL, EXOTEL_OUTBOUND_CALLER_NUMBER, TWILIO_OUTBOUND_CALLER_NUMBER
 from log import log
 from models import get_db
 from schemas import OutboundCallRequest
@@ -61,17 +62,19 @@ async def start_outbound_call(
         language="hi",
         model="nova-2",
         sampling_rate=DEFAULT_SAMPLING_RATE.value,
-        # audio_encoding=DEFAULT_AUDIO_ENCODING,
-        # chunk_size=DEFAULT_CHUNK_SIZE,
-        audio_encoding=EXOTEL_AUDIO_ENCODING,
-        chunk_size=EXOTEL_CHUNK_SIZE,
-        endpointing_config=DeepgramEndpointingConfig(),
+        audio_encoding=DEFAULT_AUDIO_ENCODING,
+        chunk_size=DEFAULT_CHUNK_SIZE,
+        # audio_encoding=EXOTEL_AUDIO_ENCODING,
+        # chunk_size=EXOTEL_CHUNK_SIZE,
+        endpointing_config=DeepgramEndpointingConfig(
+            vad_threshold_ms=300, use_single_utterance_endpointing_for_first_utterance=True
+        ),
     )
     synth_config = GoogleSynthesizerConfig.from_output_audio_config(
         output_audio_config=OutputAudioConfig(
             sampling_rate=DEFAULT_SAMPLING_RATE.value,
-            # audio_encoding=DEFAULT_AUDIO_ENCODING,
-            audio_encoding=EXOTEL_AUDIO_ENCODING,
+            audio_encoding=DEFAULT_AUDIO_ENCODING,
+            # audio_encoding=EXOTEL_AUDIO_ENCODING,
         ),
         language_code="hi-IN",
         voice_name=voice,
@@ -89,24 +92,35 @@ async def start_outbound_call(
     #     goodbye_phrases=["bye"],
     #     # actions=[LogToConsoleActionConfig(type="action_log_message_to_console")],
     # )
-
-    agent_config = ChatGPTAgentConfig(
+    agent_config = LangchainAgentConfig(
+        # model_name="llama3-70b-8192",
+        # model_name="mistral.mistral-7b-instruct-v0:2",
+        # model_name="mistral.mixtral-8x7b-instruct-v0:1",
+        model_name="meta.llama3-8b-instruct-v1:0",
+        provider="bedrock",
         initial_message=BaseMessage(text=initial_message),
         prompt_preamble=prompt,
         temperature=0.5,
         interrupt_sensitivity=interrupt_sensitivity,
-        # actions=[LogToConsoleActionConfig(type="action_log_message_to_console")],
-        end_conversation_on_goodbye=True,
-        goodbye_phrases=["bye"],
-        azure_params=AzureOpenAIConfig(
-            openai_model_name="gpt-35-turbo-0125",
-            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-            base_url=os.getenv("AZURE_OPENAI_ENDPOINT"),
-            region="southindia",
-            deployment_name="olive-ai",
-            api_version="2024-06-01",
-        ),
     )
+
+    # agent_config = ChatGPTAgentConfig(
+    #     initial_message=BaseMessage(text=initial_message),
+    #     prompt_preamble=prompt,
+    #     temperature=0.5,
+    #     interrupt_sensitivity=interrupt_sensitivity,
+    #     # actions=[LogToConsoleActionConfig(type="action_log_message_to_console")],
+    #     end_conversation_on_goodbye=True,
+    #     goodbye_phrases=["bye"],
+    #     azure_params=AzureOpenAIConfig(
+    #         openai_model_name="gpt-35-turbo-0125",
+    #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    #         base_url=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    #         region="southindia",
+    #         deployment_name="olive-ai",
+    #         api_version="2024-06-01",
+    #     ),
+    # )
 
     conversation_id = create_conversation_id()
     telephony_params = {
@@ -117,13 +131,14 @@ async def start_outbound_call(
     outbound_call = CustomOutboundCall(
         base_url=BASE_URL,
         to_phone=mobile_number,
-        from_phone=OUTBOUND_CALLER_NUMBER,
+        # from_phone=EXOTEL_OUTBOUND_CALLER_NUMBER,
+        from_phone=TWILIO_OUTBOUND_CALLER_NUMBER,
         config_manager=CONFIG_MANAGER,
         transcriber_config=transcriber_config,
         agent_config=agent_config,
         synthesizer_config=synth_config,
-        telephony_config=EXOTEL_CONFIG,
-        # telephony_config=TWILIO_CONFIG,
+        # telephony_config=EXOTEL_CONFIG,
+        telephony_config=TWILIO_CONFIG,
         telephony_params=telephony_params,
         conversation_id=conversation_id,
     )

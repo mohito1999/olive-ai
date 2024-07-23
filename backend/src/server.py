@@ -65,6 +65,10 @@ add_exception_handlers(app)
 sentry_sdk.init(
     dsn=config.SENTRY_DSN,
     environment=config.ENVIRONMENT,
+    traces_sample_rate=1.0,
+    sample_rate=1.0,
+    # enable_tracing=True,
+    max_request_body_size="always",
     integrations=[
         AsyncioIntegration(),
         LoguruIntegration(),
@@ -84,7 +88,7 @@ telephony_server = CustomTelephonyServer(
         )
     ],
 )
-# app.include_router(telephony_server.get_router())
+app.include_router(telephony_server.get_router())
 
 api_router = APIRouter(prefix="/v1")
 api_router.include_router(health.router, prefix="/health", tags=["health"])
@@ -92,7 +96,9 @@ api_router.include_router(organization.router, prefix="/organizations", tags=["o
 api_router.include_router(agent.router, prefix="/agents", tags=["agent"])
 api_router.include_router(transcriber.router, prefix="/transcribers", tags=["transcriber"])
 api_router.include_router(synthesizer.router, prefix="/synthesizers", tags=["synthesizer"])
-api_router.include_router(telephony_service.router, prefix="/telephony-services", tags=["telephony_service"])
+api_router.include_router(
+    telephony_service.router, prefix="/telephony-services", tags=["telephony_service"]
+)
 api_router.include_router(campaign.router, prefix="/campaigns", tags=["campaign"])
 api_router.include_router(customer_set.router, prefix="/customer-sets", tags=["customer-set"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])

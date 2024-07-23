@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Generic, List, Optional, Tuple, Type, TypeVar
 
 from sqlalchemy import Column, delete, desc, func, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import CursorResult, Result
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,7 @@ from exceptions import (
     RecordIntegrityException,
     RecordNotFoundException,
 )
+from log import log
 from models import Base
 from schemas import BaseSchema
 
@@ -28,19 +30,41 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def _table(self) -> Type[TABLE]:
-        ...
+    def _table(self) -> Type[TABLE]: ...
 
     @property
     @abstractmethod
-    def _schema(self) -> Type[SCHEMA]:
-        ...
+    def _schema(self) -> Type[SCHEMA]: ...
 
     async def create(self, in_schema: IN_SCHEMA) -> SCHEMA:
         try:
             entry = self._table(**in_schema.dict())
             await entry.save(self._db_session)
             return self._schema.from_orm(entry)
+        except IntegrityError as e:
+            raise RecordIntegrityException(e)
+        except Exception as e:
+            raise DatabaseException(e)
+
+    async def bulk_create(
+        self,
+        items: list[IN_SCHEMA],
+        ignore_conflicts: Optional[bool] = False,
+        on_conflict: Optional[Callable] = None,
+    ) -> SCHEMA:
+        try:
+            q = insert(self._table)
+            q = q.values([item.dict() for item in items])
+
+            if on_conflict:
+                on_conflict_args = on_conflict(q)
+                if on_conflict_args.get("set_"):
+                    q = q.on_conflict_do_update(**on_conflict_args)
+                else:
+                    q = q.on_conflict_do_nothing(**on_conflict_args)
+
+            result: Result = await self._db_session.execute(q)
+            return result
         except IntegrityError as e:
             raise RecordIntegrityException(e)
         except Exception as e:

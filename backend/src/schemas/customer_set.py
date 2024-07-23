@@ -30,9 +30,13 @@ class CreateCustomerSetRequest(BaseSchema):
 
 class CustomerSetResponse(CreateCustomerSetRequest):
     id: str
+    status: CustomerSetStatus
 
 
 class UpdateCustomerSetRequest(BaseSchema):
     name: Optional[str] = None
     description: Optional[str] = None
 
+
+class ProcessCustomerSetResponse(BaseSchema):
+    message: str
