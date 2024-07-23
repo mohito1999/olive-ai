@@ -8,19 +8,19 @@ RUN apt-get update && apt-get install -y build-essential libssl-dev libcurl4-ope
     && rm -rf /var/lib/apt/lists/*
 
 # set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH=/app/src
+ENV PYTHONDONTWRITEBYTECODE=1 
+ENV PYTHONUNBUFFERED=1 
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 
+ENV PYTHONPATH=/app
 
 # install dependencies
 RUN pip install poetry
 
 COPY ./pyproject.toml ./poetry.lock /app/
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
 RUN python3 -m venv venv
 RUN venv/bin/pip install -U pip setuptools
-RUN . /app/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
+RUN . /app/venv/bin/activate && poetry install
 
 ############################
 # STEP 2 build a small image
@@ -28,19 +28,12 @@ RUN . /app/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 FROM python:3.10-slim as deployment
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y curl \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN pip install playwright==1.44.0 && \
-    playwright install --with-deps
+RUN apt-get update && apt-get install -y ffmpeg libportaudio2 && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dependencies /app/venv ./venv
 
 # copy project
 COPY . /app/
 
-ARG COMMIT_SHA
-LABEL COMMIT_SHA=$COMMIT_SHA
-ENV ENV_COMMIT_SHA=$COMMIT_SHA
-
 CMD ["/app/scripts/run.sh", "worker"]
+

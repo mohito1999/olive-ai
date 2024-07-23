@@ -42,6 +42,75 @@ services:
                   path: ./pyproject.toml
                   target: /app/pyproject.toml
 
+    worker:
+        build:
+            context: .
+            dockerfile: ./docker/worker/Dockerfile
+        container_name: worker
+        env_file:
+            - .env
+        environment:
+            - AWS_ACCESS_KEY_ID=dummy
+            - AWS_SECRET_ACCESS_KEY=dummy
+        network_mode: "host"
+        depends_on:
+            localstack:
+                condition: service_healthy
+        develop:
+            watch:
+                - action: sync+restart
+                  path: ./src
+                  target: /app/src
+                - action: rebuild
+                  path: ./pyproject.toml
+                  target: /app/pyproject.toml
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: ./docker/beat/Dockerfile
+        container_name: scheduler
+        env_file:
+            - .env
+        environment:
+            - AWS_ACCESS_KEY_ID=dummy
+            - AWS_SECRET_ACCESS_KEY=dummy
+        network_mode: "host"
+        depends_on:
+            localstack:
+                condition: service_healthy
+        develop:
+            watch:
+                - action: sync+restart
+                  path: ./src
+                  target: /app/src
+                - action: rebuild
+                  path: ./pyproject.toml
+                  target: /app/pyproject.toml
+
+    localstack:
+        image: localstack/localstack:latest
+        container_name: "${LOCALSTACK_DOCKER_NAME:-localstack}"
+        environment:
+            - SERVICES=sqs
+            - AWS_DEFAULT_REGION=ap-south-1
+        healthcheck:
+            test:
+                - CMD
+                - bash
+                - -c
+                - awslocal sqs list-queues
+            interval: 10s
+            timeout: 15s
+            start_period: 15s
+        ports:
+            - "127.0.0.1:4566:4566"            # LocalStack Gateway
+            - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+        volumes:
+            - "${LOCALSTACK_VOLUME_DIR:-/tmp/localstack}:/var/lib/localstack"
+            - "/var/run/docker.sock:/var/run/docker.sock"
+            - "./scripts/localstack:/etc/localstack/init/ready.d"
+
 volumes:
     # olive_db:
     #     external: true

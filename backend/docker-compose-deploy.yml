@@ -1,4 +1,17 @@
 services:
+    caddy:
+        image: caddy:alpine
+        restart: unless-stopped
+        container_name: caddy
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - $PWD/Caddyfile:/etc/caddy/Caddyfile
+            - $PWD/site:/srv
+            - caddy_data:/data
+            - caddy_config:/config
+
     olive:
         build:
             context: .
@@ -16,24 +29,50 @@ services:
                 - action: rebuild
                   path: ./pyproject.toml
                   target: /app/pyproject.toml
-                - action: sync+restart
-                  path: ./.env
-                  target: /app/.env
 
-    caddy:
-        image: caddy:alpine
-        restart: unless-stopped
-        container_name: caddy
-        ports:
-            - 80:80
-            - 443:443
-        volumes:
-            - $PWD/Caddyfile:/etc/caddy/Caddyfile
-            - $PWD/site:/srv
-            - caddy_data:/data
-            - caddy_config:/config
+    worker:
+        build:
+            context: .
+            dockerfile: ./docker/worker/Dockerfile
+        container_name: worker
+        env_file:
+            - .env
+        network_mode: "host"
+        depends_on:
+            localstack:
+                condition: service_healthy
+        develop:
+            watch:
+                - action: sync+restart
+                  path: ./src
+                  target: /app/src
+                - action: rebuild
+                  path: ./pyproject.toml
+                  target: /app/pyproject.toml
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: ./docker/beat/Dockerfile
+        container_name: scheduler
+        env_file:
+            - .env
+        network_mode: "host"
+        depends_on:
+            localstack:
+                condition: service_healthy
+        develop:
+            watch:
+                - action: sync+restart
+                  path: ./src
+                  target: /app/src
+                - action: rebuild
+                  path: ./pyproject.toml
+                  target: /app/pyproject.toml
 
 volumes:
+    # olive_db:
+    #     external: true
     caddy_data:
     caddy_config:
 

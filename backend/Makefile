@@ -3,16 +3,16 @@ SHELL := /bin/bash
 -include ./.env
 
 services:
-	@docker-compose up olive-db --force-recreate --remove-orphans
+	@docker compose up localstack worker scheduler --force-recreate --remove-orphans
 
 start:
-	@docker-compose up --force-recreate --remove-orphans
+	@docker compose up --force-recreate --remove-orphans
 
 watch:
-	@docker-compose watch --no-up & docker-compose up olive-db --force-recreate --remove-orphans
+	@docker compose watch localstack worker scheduler --no-up & docker compose up localstack worker scheduler --force-recreate --remove-orphans
 
 rebuild:
-	@docker-compose build
+	@docker compose build
 
 local.install:
 	@chmod +x ./scripts/init.sh
@@ -26,7 +26,7 @@ local.server:
 # Database
 ##################################################
 database.connect: ## Connect to database
-	docker-compose exec olive-db psql -U ${POSTGRES_USER} --db ${POSTGRES_DB}
+	docker compose exec olive-db psql -U ${POSTGRES_USER} --db ${POSTGRES_DB}
 
 database.create.migration: ## Create alembic migration file
 	alembic revision --autogenerate
