@@ -80,3 +80,12 @@ class UpdateCampaignRequest(BaseSchema):
     synthesizer_id: Optional[str] = None
     synthesizer_config: Optional[dict] = None
     customer_sets: Optional[list[str]] = None
+
+
+class TestCampaignRequest(BaseSchema):
+    customer_id: str
+
+
+class TestCampaignResponse(BaseSchema):
+    call_id: str
+    message: str

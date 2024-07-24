@@ -20,7 +20,7 @@ class Customer(Base, AuditMixin, metaclass=BaseMeta):
         server_default=text("id_generator('customer')"),
     )
     organization_id = Column(String, ForeignKey("organization.id"), nullable=False)
-    customer_set_id = Column(String, ForeignKey("customer_set.id"), nullable=False)
+    customer_set_id = Column(String, ForeignKey("customer_set.id"), nullable=True)
     name = Column(String, nullable=False)
     mobile_number = Column(String, nullable=False)
     customer_metadata = Column(JSONB, nullable=False, default={})

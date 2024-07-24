@@ -29,7 +29,7 @@ class Call(Base, AuditMixin, metaclass=BaseMeta):
     duration = Column(Integer, nullable=False, default=0)
     recording_url = Column(String, nullable=True)
     transcript = Column(String, nullable=True)
-    summary = Column(String, nullable=True)
+    actions = Column(JSONB, nullable=True)
 
     telephony_service_id = Column(String, ForeignKey("telephony_service.id"), nullable=False)
     telephony_service_config = Column(JSONB, nullable=False)

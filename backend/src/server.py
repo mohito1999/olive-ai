@@ -17,7 +17,9 @@ from log import log
 from resources import (
     agent,
     auth,
+    call,
     campaign,
+    customer,
     customer_set,
     health,
     organization,
@@ -88,10 +90,11 @@ telephony_server = CustomTelephonyServer(
         )
     ],
 )
-app.include_router(telephony_server.get_router())
+app.include_router(telephony_server.get_router(), include_in_schema=False)
 
 api_router = APIRouter(prefix="/v1")
 api_router.include_router(health.router, prefix="/health", tags=["health"])
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(organization.router, prefix="/organizations", tags=["organization"])
 api_router.include_router(agent.router, prefix="/agents", tags=["agent"])
 api_router.include_router(transcriber.router, prefix="/transcribers", tags=["transcriber"])
@@ -101,6 +104,7 @@ api_router.include_router(
 )
 api_router.include_router(campaign.router, prefix="/campaigns", tags=["campaign"])
 api_router.include_router(customer_set.router, prefix="/customer-sets", tags=["customer-set"])
-api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
-api_router.include_router(outbound_call.router, prefix="/calls", tags=["call"])
+api_router.include_router(customer.router, prefix="/customers", tags=["customer"])
+api_router.include_router(call.router, prefix="/calls", tags=["call"])
+api_router.include_router(outbound_call.router, prefix="/calls", tags=["[deprecated]call"])
 app.include_router(api_router)

@@ -23,7 +23,7 @@ def upgrade() -> None:
     op.create_table('customer',
     sa.Column('id', sa.String(), server_default=sa.text("id_generator('customer')"), nullable=False),
     sa.Column('organization_id', sa.String(), nullable=False),
-    sa.Column('customer_set_id', sa.String(), nullable=False),
+    sa.Column('customer_set_id', sa.String(), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('mobile_number', sa.String(), nullable=False),
     sa.Column('customer_metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=False),

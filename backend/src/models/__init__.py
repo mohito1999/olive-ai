@@ -1,7 +1,7 @@
 from .agent import Agent
 from .base import Base
 from .db import get_db
-# from .call import Call
+from .call import Call
 from .campaign import Campaign
 from .campaign_customer_set import CampaignCustomerSet
 from .customer import Customer

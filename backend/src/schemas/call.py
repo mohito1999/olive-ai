@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional
 
 from vocode.streaming.models.agent import InterruptSensitivity
@@ -16,10 +17,10 @@ class CallDBInputSchema(BaseSchema):
     to_number: str
     status: str
     retry_count: int
-    duration: int
-    recording_url: Optional[str]
-    transcript: Optional[str]
-    summary: Optional[str]
+    duration: Optional[int] = None
+    recording_url: Optional[str] = None
+    transcript: Optional[str] = None
+    actions: Optional[dict] = None
     telephony_service_id: str
     telephony_service_config: dict
     transcriber_id: str
@@ -28,13 +29,16 @@ class CallDBInputSchema(BaseSchema):
     agent_config: dict
     synthesizer_id: str
     synthesizer_config: dict
+    created_by: str
+    updated_by: str
 
 
 class CallDBSchema(CallDBInputSchema):
     id: str
 
 
-class CreateCallRequest(BaseSchema):
+class CallResponse(BaseSchema):
+    id: str
     organization_id: str
     campaign_id: str
     customer_id: str
@@ -43,22 +47,15 @@ class CreateCallRequest(BaseSchema):
     to_number: str
     status: str
     retry_count: int
-    duration: int
+    duration: Optional[int]
     recording_url: Optional[str]
     transcript: Optional[str]
-    summary: Optional[str]
-    telephony_service_id: str
-    telephony_service_config: dict
-    transcriber_id: str
-    transcriber_config: dict
-    agent_id: str
-    agent_config: dict
-    synthesizer_id: str
-    synthesizer_config: dict
+    actions: Optional[dict]
 
 
-class CallResponse(CreateCallRequest):
-    id: str
+class Synth(str, Enum):
+    elevenlabs = "elevenlabs"
+    google = "google"
 
 
 class OutboundCallRequest(BaseSchema):
@@ -69,5 +66,5 @@ class OutboundCallRequest(BaseSchema):
     prompt: Optional[str] = DEFAULT_PROMPT
     initial_message: Optional[str] = DEFAULT_INITIAL_MESSAGE
     interrupt_sensitivity: Optional[InterruptSensitivity] = "low"
+    synthesizer: Optional[Synth] = "google"
     voice: Optional[str] = DEFAULT_VOICE
-
