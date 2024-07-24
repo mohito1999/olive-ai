@@ -3,13 +3,10 @@ SHELL := /bin/bash
 -include ./.env
 
 services:
-	@docker compose up localstack worker scheduler --force-recreate --remove-orphans
+	@docker compose up localstack worker scheduler cache --force-recreate --remove-orphans
 
 start:
 	@docker compose up --force-recreate --remove-orphans
-
-watch:
-	@docker compose watch localstack worker scheduler --no-up & docker compose up localstack worker scheduler --force-recreate --remove-orphans
 
 rebuild:
 	@docker compose build
@@ -21,6 +18,12 @@ local.install:
 local.server:
 	@source venv/bin/activate;
 	@python src/run_uvicorn.py
+
+##################################################
+# Cache
+##################################################
+cache.connect: ## Connect to cache
+	docker compose exec cache redis-cli -a ${REDISPASSWORD}
 
 ##################################################
 # Database

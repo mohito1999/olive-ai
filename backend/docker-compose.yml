@@ -111,9 +111,25 @@ services:
             - "/var/run/docker.sock:/var/run/docker.sock"
             - "./scripts/localstack:/etc/localstack/init/ready.d"
 
+    cache:
+        image: redis:7.2-alpine
+        container_name: cache
+        restart: unless-stopped
+        ports:
+            - "6379:6379"
+        command: ["redis-server"]
+        healthcheck:
+            test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+            interval: 1s
+            timeout: 3s
+            retries: 5
+        volumes: 
+          - cache:/data
+
 volumes:
     # olive_db:
     #     external: true
     caddy_data:
     caddy_config:
+    cache:
 
