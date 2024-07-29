@@ -11,6 +11,12 @@ start:
 rebuild:
 	@docker compose build
 
+deploy:
+	@docker-compose -f docker-compose-deploy.yml build && docker-compose -f docker-compose-deploy.yml up -d --force-recreate --remove-orphans
+
+logs:
+	@docker-compose -f docker-compose-deploy.yml logs -f
+
 local.install:
 	@chmod +x ./scripts/init.sh
 	@./scripts/init.sh

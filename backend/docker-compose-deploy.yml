@@ -38,9 +38,6 @@ services:
         env_file:
             - .env
         network_mode: "host"
-        depends_on:
-            localstack:
-                condition: service_healthy
         develop:
             watch:
                 - action: sync+restart
@@ -58,9 +55,6 @@ services:
         env_file:
             - .env
         network_mode: "host"
-        depends_on:
-            localstack:
-                condition: service_healthy
         develop:
             watch:
                 - action: sync+restart
@@ -75,4 +69,5 @@ volumes:
     #     external: true
     caddy_data:
     caddy_config:
+    cache:
 
