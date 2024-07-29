@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import Column, ForeignKey, String, text
+from sqlalchemy import Column, ForeignKey, Text, text
 
 from .audit import AuditMixin
 from .base import Base, BaseMeta
@@ -10,15 +10,15 @@ class CustomerSet(Base, AuditMixin, metaclass=BaseMeta):
     __tablename__ = "customer_set"
 
     id = Column(
-        String,
+        Text,
         nullable=False,
         primary_key=True,
         server_default=text("id_generator('customer-set')"),
     )
-    organization_id = Column(String, ForeignKey("organization.id"), nullable=False)
-    name = Column(String, nullable=True)
-    description = Column(String, nullable=True)
-    type = Column(String, nullable=False)
-    status = Column(String, nullable=False)
-    url = Column(String, nullable=True)
+    organization_id = Column(Text, ForeignKey("organization.id"), nullable=False)
+    name = Column(Text, nullable=True)
+    description = Column(Text, nullable=True)
+    type = Column(Text, nullable=False)
+    status = Column(Text, nullable=False)
+    url = Column(Text, nullable=True)
 

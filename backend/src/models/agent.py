@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import Column, String, text
+from sqlalchemy import Column, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 
 from .audit import AuditMixin
@@ -11,11 +11,11 @@ class Agent(Base, AuditMixin, metaclass=BaseMeta):
     __tablename__ = "agent"
 
     id = Column(
-        String,
+        Text,
         nullable=False,
         primary_key=True,
         server_default=text("id_generator('agent')"),
     )
-    name = Column(String, nullable=False, unique=True)
+    name = Column(Text, nullable=False, unique=True)
     config = Column(JSONB, nullable=False, default={})
 

@@ -6,7 +6,7 @@ Define an Abstract Base Class (ABC) for models
 from datetime import datetime
 from weakref import WeakValueDictionary
 
-from sqlalchemy import Column, DateTime, String, text
+from sqlalchemy import Column, DateTime, Text, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import DeclarativeMeta, as_declarative
 from sqlalchemy.orm import aliased
@@ -37,7 +37,7 @@ class Base:
     __mapper_args__ = {"eager_defaults": True}
 
     id = Column(
-        String,
+        Text,
         nullable=False,
         primary_key=True,
         server_default=text("id_generator()"),

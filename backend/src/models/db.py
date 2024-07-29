@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# from typing import Generator
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine

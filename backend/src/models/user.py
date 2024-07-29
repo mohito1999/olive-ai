@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import Column, ForeignKey, String, text
+from sqlalchemy import Column, ForeignKey, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 
 from constants import AuthProvider, UserRole
@@ -18,11 +18,11 @@ class User(Base, AuditMixin, metaclass=BaseMeta):
         nullable=False,
         primary_key=True,
     )
-    name = Column(String, nullable=True)
-    email = Column(String, nullable=True)
-    mobile_number = Column(String, nullable=True)
+    name = Column(Text, nullable=True)
+    email = Column(Text, nullable=True)
+    mobile_number = Column(Text, nullable=True)
     auth_provider = Column(
-        String, nullable=False, server_default=text(AuthProvider.SUPABASE.value)
+        Text, nullable=False, server_default=text(AuthProvider.SUPABASE.value)
     )
-    role = Column(String, nullable=False, default=UserRole.DEFAULT)
-    organization_id = Column(String, ForeignKey("organization.id"), nullable=False)
+    role = Column(Text, nullable=False, default=UserRole.DEFAULT)
+    organization_id = Column(Text, ForeignKey("organization.id"), nullable=False)
