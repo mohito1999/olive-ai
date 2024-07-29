@@ -10,6 +10,7 @@ from fastapi import WebSocket
 from loguru import logger
 from vocode.streaming.agent.abstract_factory import AbstractAgentFactory
 from vocode.streaming.models.agent import AgentConfig
+from vocode.streaming.models.audio import AudioEncoding
 from vocode.streaming.models.events import PhoneCallConnectedEvent
 from vocode.streaming.models.synthesizer import SynthesizerConfig
 from vocode.streaming.models.telephony import PhoneCallDirection
@@ -67,7 +68,9 @@ class ExotelPhoneConversation(AbstractPhoneConversation[ExotelOutputDevice]):
             to_phone=to_phone,
             base_url=base_url,
             config_manager=config_manager,
-            output_device=ExotelOutputDevice(),
+            output_device=ExotelOutputDevice(
+                convert_to_linear16=synthesizer_config.audio_encoding == AudioEncoding.MULAW
+            ),
             agent_config=agent_config,
             transcriber_config=transcriber_config,
             synthesizer_config=synthesizer_config,

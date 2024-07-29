@@ -78,9 +78,7 @@ class CustomGoogleSynthesizer(BaseSynthesizer[GoogleSynthesizerConfig]):
                 input=synthesis_input,
                 voice=self.voice,
                 audio_config=self.audio_config,
-                enable_time_pointing=[
-                    tts.SynthesizeSpeechRequest.TimepointType.SSML_MARK
-                ],
+                enable_time_pointing=[tts.SynthesizeSpeechRequest.TimepointType.SSML_MARK],
             )
         )
 
@@ -126,9 +124,7 @@ class CustomSynthesizerFactory(AbstractSynthesizerFactory):
         elif isinstance(synthesizer_config, CartesiaSynthesizerConfig):
             return CartesiaSynthesizer(synthesizer_config)
         elif isinstance(synthesizer_config, ElevenLabsSynthesizerConfig):
-            eleven_labs_synthesizer_class_type: Type[BaseSynthesizer] = (
-                ElevenLabsSynthesizer
-            )
+            eleven_labs_synthesizer_class_type: Type[BaseSynthesizer] = ElevenLabsSynthesizer
             if synthesizer_config.experimental_websocket:
                 eleven_labs_synthesizer_class_type = ElevenLabsWSSynthesizer
             return eleven_labs_synthesizer_class_type(synthesizer_config)

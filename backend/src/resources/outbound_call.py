@@ -65,20 +65,25 @@ async def start_outbound_call(
         language="hi",
         model="nova-2",
         sampling_rate=DEFAULT_SAMPLING_RATE.value,
-        audio_encoding=DEFAULT_AUDIO_ENCODING,
-        chunk_size=DEFAULT_CHUNK_SIZE,
-        # audio_encoding=EXOTEL_AUDIO_ENCODING,
-        # chunk_size=EXOTEL_CHUNK_SIZE,
+        # audio_encoding=DEFAULT_AUDIO_ENCODING,
+        # chunk_size=DEFAULT_CHUNK_SIZE,
+        audio_encoding=EXOTEL_AUDIO_ENCODING,
+        chunk_size=EXOTEL_CHUNK_SIZE,
         endpointing_config=DeepgramEndpointingConfig(
             vad_threshold_ms=300, use_single_utterance_endpointing_for_first_utterance=True
         ),
     )
     if payload.synthesizer == "elevenlabs":
-        synth_config = ElevenLabsSynthesizerConfig.from_telephone_output_device(
+        synth_config = ElevenLabsSynthesizerConfig.from_output_audio_config(
+            output_audio_config=OutputAudioConfig(
+                sampling_rate=DEFAULT_SAMPLING_RATE.value,
+                audio_encoding=DEFAULT_AUDIO_ENCODING,
+                # audio_encoding=EXOTEL_AUDIO_ENCODING,
+            ),
             api_key=os.getenv("ELEVEN_LABS_API_KEY"),
             voice_id=voice,
             model_id="eleven_turbo_v2_5",
-            stability=1,
+            stability=0.7,
             # experimental_websocket=True,
             # experimental_streaming=True,
             optimize_streaming_latency=3,
@@ -88,8 +93,8 @@ async def start_outbound_call(
         synth_config = GoogleSynthesizerConfig.from_output_audio_config(
             output_audio_config=OutputAudioConfig(
                 sampling_rate=DEFAULT_SAMPLING_RATE.value,
-                audio_encoding=DEFAULT_AUDIO_ENCODING,
-                # audio_encoding=EXOTEL_AUDIO_ENCODING,
+                # audio_encoding=DEFAULT_AUDIO_ENCODING,
+                audio_encoding=EXOTEL_AUDIO_ENCODING,
             ),
             language_code="hi-IN",
             voice_name=voice,
@@ -148,14 +153,14 @@ async def start_outbound_call(
     outbound_call = CustomOutboundCall(
         base_url=BASE_URL,
         to_phone=mobile_number,
-        # from_phone=EXOTEL_OUTBOUND_CALLER_NUMBER,
-        from_phone=TWILIO_OUTBOUND_CALLER_NUMBER,
+        from_phone=EXOTEL_OUTBOUND_CALLER_NUMBER,
+        # from_phone=TWILIO_OUTBOUND_CALLER_NUMBER,
         config_manager=CONFIG_MANAGER,
         transcriber_config=transcriber_config,
         agent_config=agent_config,
         synthesizer_config=synth_config,
-        # telephony_config=EXOTEL_CONFIG,
-        telephony_config=TWILIO_CONFIG,
+        telephony_config=EXOTEL_CONFIG,
+        # telephony_config=TWILIO_CONFIG,
         telephony_params=telephony_params,
         conversation_id=conversation_id,
     )

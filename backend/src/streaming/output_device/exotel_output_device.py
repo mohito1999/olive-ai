@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 import asyncio
+import audioop
 import base64
 import json
 from typing import Optional, Union
-from loguru import logger
 
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketState
+from loguru import logger
 from pydantic import BaseModel
-
 from vocode.streaming.output_device.abstract_output_device import AbstractOutputDevice
-from vocode.streaming.telephony.constants import DEFAULT_SAMPLING_RATE
-from streaming.telephony.constants import EXOTEL_AUDIO_ENCODING
 from vocode.streaming.output_device.audio_chunk import AudioChunk, ChunkState
+from vocode.streaming.telephony.constants import DEFAULT_SAMPLING_RATE
 from vocode.streaming.utils.create_task import asyncio_create_task_with_done_error_log
 from vocode.streaming.utils.worker import InterruptibleEvent
+
+from streaming.telephony.constants import EXOTEL_AUDIO_ENCODING
 
 
 class ChunkFinishedMarkMessage(BaseModel):
@@ -27,22 +28,27 @@ MarkMessage = Union[ChunkFinishedMarkMessage]  # space for more mark messages
 
 class ExotelOutputDevice(AbstractOutputDevice):
     def __init__(
-        self, ws: Optional[WebSocket] = None, stream_sid: Optional[str] = None
+        self,
+        ws: Optional[WebSocket] = None,
+        stream_sid: Optional[str] = None,
+        convert_to_linear16: bool = False,
     ):
-        super().__init__(
-            sampling_rate=DEFAULT_SAMPLING_RATE, audio_encoding=EXOTEL_AUDIO_ENCODING
-        )
+        super().__init__(sampling_rate=DEFAULT_SAMPLING_RATE, audio_encoding=EXOTEL_AUDIO_ENCODING)
         self.ws = ws
         self.stream_sid = stream_sid
+        self.convert_to_linear16 = convert_to_linear16
         self.active = True
 
         self._exotel_events_queue: asyncio.Queue[str] = asyncio.Queue()
         self._mark_message_queue: asyncio.Queue[MarkMessage] = asyncio.Queue()
-        self._unprocessed_audio_chunks_queue: asyncio.Queue[
-            InterruptibleEvent[AudioChunk]
-        ] = asyncio.Queue()
+        self._unprocessed_audio_chunks_queue: asyncio.Queue[InterruptibleEvent[AudioChunk]] = (
+            asyncio.Queue()
+        )
 
     def consume_nonblocking(self, item: InterruptibleEvent[AudioChunk]):
+        if self.convert_to_linear16:
+            item.payload.data = self._convert_chunk_to_linear16(item.payload.data)
+
         if not item.is_interrupted():
             self._send_audio_chunk_and_mark(
                 chunk=item.payload.data, chunk_id=str(item.payload.chunk_id)
@@ -58,6 +64,9 @@ class ExotelOutputDevice(AbstractOutputDevice):
 
     def enqueue_mark_message(self, mark_message: MarkMessage):
         self._mark_message_queue.put_nowait(mark_message)
+
+    def _convert_chunk_to_linear16(self, chunk: bytes) -> bytes:
+        return audioop.ulaw2lin(chunk, 2)
 
     async def _send_exotel_messages(self):
         while True:
@@ -129,4 +138,3 @@ class ExotelOutputDevice(AbstractOutputDevice):
             "stream_sid": self.stream_sid,
         }
         self._exotel_events_queue.put_nowait(json.dumps(clear_message))
-
