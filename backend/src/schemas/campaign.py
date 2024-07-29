@@ -13,6 +13,7 @@ class CampaignDBInputSchema(BaseSchema):
     type: str
     status: str
     prompt: str
+    initial_message: str
     max_duration: int
     max_retries: int
     end_date: Optional[str]
@@ -43,6 +44,7 @@ class CreateCampaignRequest(BaseSchema):
     type: CampaignType
     status: Optional[CampaignStatus] = CampaignStatus.DRAFT
     prompt: str
+    initial_message: str
     max_duration: int
     max_retries: int
     end_date: Optional[str] = None
@@ -68,6 +70,7 @@ class UpdateCampaignRequest(BaseSchema):
     type: Optional[CampaignType] = None
     status: Optional[CampaignStatus] = None
     prompt: Optional[str] = None
+    initial_message: Optional[str] = None
     max_duration: Optional[int] = None
     max_retries: Optional[int] = None
     end_date: Optional[str] = None

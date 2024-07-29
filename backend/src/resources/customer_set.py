@@ -19,7 +19,6 @@ from log import log
 from models import get_db
 from repositories import CustomerSetRepository, OrganizationRepository
 from schemas import (
-    CreateCustomerSetRequest,
     CustomerSetDBInputSchema,
     CustomerSetResponse,
     ProcessCustomerSetResponse,
@@ -99,9 +98,10 @@ async def list_customer_sets(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info("Listing customer_sets")
-        items = await CustomerSetRepository(db).list()
+        items = await CustomerSetRepository(db).list(organization_id=current_user_organization_id)
         return [CustomerSetResponse(**item.dict()) for item in items]
     except ApplicationException as e:
         raise e
@@ -115,9 +115,10 @@ async def get_customer_set(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Getting customer_set for customer_set_id: '{customer_set_id}'")
-        item = await CustomerSetRepository(db).get(id=customer_set_id)
+        item = await CustomerSetRepository(db).get(id=customer_set_id, organization_id=current_user_organization_id)
         return CustomerSetResponse(**item.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)
@@ -133,11 +134,12 @@ async def process_customer_set(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Queuing processing for customer_set for customer_set_id: '{customer_set_id}'")
-        item = await CustomerSetRepository(db).get(id=customer_set_id)
-        # if item.status == CustomerSetStatus.PROCESSED.value:
-        #     raise BadRequestException(detail="Customer set has already been processed")
+        item = await CustomerSetRepository(db).get(id=customer_set_id, organization_id=current_user_organization_id)
+        if item.status == CustomerSetStatus.PROCESSED.value:
+            raise BadRequestException(detail="Customer set has already been processed")
 
         process_csv_file_task.apply_async((customer_set_id,))
         return ProcessCustomerSetResponse(message="Processing queued successfully")
@@ -157,11 +159,13 @@ async def update_customer_set(
     db: AsyncSession = Depends(get_db),
 ):
     current_user_id = current_user.get("sub")
+    current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Updating customer_set for customer_set_id: '{customer_set_id}'")
         customer_set = await CustomerSetRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=customer_set_id,
+            organization_id=current_user_organization_id,
         )
         return CustomerSetResponse(**customer_set.dict())
     except RecordNotFoundException as e:
@@ -179,15 +183,16 @@ async def delete_customer_set(
     db: AsyncSession = Depends(get_db),
     supabase: SupabaseClient = Depends(get_supabase),
 ):
+    current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
-        customer_set = await CustomerSetRepository(db).get(id=customer_set_id)
+        customer_set = await CustomerSetRepository(db).get(id=customer_set_id, organization_id=current_user_organization_id)
         log.info(f"Deleting files for customer_set_id: '{customer_set_id}'")
         response = await supabase.storage.from_(SUPABASE_CUSTOMER_SET_BUCKET_NAME).remove(
             customer_set.url
         )
         log.debug(response)
         log.info(f"Deleting customer_set for customer_set_id: '{customer_set_id}'")
-        await CustomerSetRepository(db).delete(id=customer_set_id)
+        await CustomerSetRepository(db).delete(id=customer_set_id, organization_id=current_user_organization_id)
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

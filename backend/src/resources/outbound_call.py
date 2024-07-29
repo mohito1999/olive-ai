@@ -10,7 +10,10 @@ from vocode.streaming.models.agent import (
 )
 from vocode.streaming.models.client_backend import OutputAudioConfig
 from vocode.streaming.models.message import BaseMessage
-from vocode.streaming.models.synthesizer import GoogleSynthesizerConfig
+from vocode.streaming.models.synthesizer import (
+    ElevenLabsSynthesizerConfig,
+    GoogleSynthesizerConfig,
+)
 from vocode.streaming.models.transcriber import (
     DEFAULT_AUDIO_ENCODING,
     DEFAULT_CHUNK_SIZE,
@@ -70,17 +73,31 @@ async def start_outbound_call(
             vad_threshold_ms=300, use_single_utterance_endpointing_for_first_utterance=True
         ),
     )
-    synth_config = GoogleSynthesizerConfig.from_output_audio_config(
-        output_audio_config=OutputAudioConfig(
-            sampling_rate=DEFAULT_SAMPLING_RATE.value,
-            audio_encoding=DEFAULT_AUDIO_ENCODING,
-            # audio_encoding=EXOTEL_AUDIO_ENCODING,
-        ),
-        language_code="hi-IN",
-        voice_name=voice,
-        pitch=-10.0,
-        speaking_rate=1.1,
-    )
+    if payload.synthesizer == "elevenlabs":
+        synth_config = ElevenLabsSynthesizerConfig.from_telephone_output_device(
+            api_key=os.getenv("ELEVEN_LABS_API_KEY"),
+            voice_id=voice,
+            model_id="eleven_turbo_v2_5",
+            stability=1,
+            # experimental_websocket=True,
+            # experimental_streaming=True,
+            optimize_streaming_latency=3,
+            similarity_boost=0,
+        )
+    elif payload.synthesizer == "google":
+        synth_config = GoogleSynthesizerConfig.from_output_audio_config(
+            output_audio_config=OutputAudioConfig(
+                sampling_rate=DEFAULT_SAMPLING_RATE.value,
+                audio_encoding=DEFAULT_AUDIO_ENCODING,
+                # audio_encoding=EXOTEL_AUDIO_ENCODING,
+            ),
+            language_code="hi-IN",
+            voice_name=voice,
+            pitch=-10.0,
+            speaking_rate=1.1,
+        )
+
+    log.info(f"Synthesizer Config: {synth_config}")
 
     # agent_config = GroqAgentConfig(
     #     model_name="llama3-8b-8192",
@@ -92,35 +109,35 @@ async def start_outbound_call(
     #     goodbye_phrases=["bye"],
     #     # actions=[LogToConsoleActionConfig(type="action_log_message_to_console")],
     # )
-    agent_config = LangchainAgentConfig(
-        # model_name="llama3-70b-8192",
-        # model_name="mistral.mistral-7b-instruct-v0:2",
-        # model_name="mistral.mixtral-8x7b-instruct-v0:1",
-        model_name="meta.llama3-8b-instruct-v1:0",
-        provider="bedrock",
-        initial_message=BaseMessage(text=initial_message),
-        prompt_preamble=prompt,
-        temperature=0.5,
-        interrupt_sensitivity=interrupt_sensitivity,
-    )
-
-    # agent_config = ChatGPTAgentConfig(
+    # agent_config = LangchainAgentConfig(
+    #     # model_name="llama3-70b-8192",
+    #     # model_name="mistral.mistral-7b-instruct-v0:2",
+    #     # model_name="mistral.mixtral-8x7b-instruct-v0:1",
+    #     model_name="meta.llama3-8b-instruct-v1:0",
+    #     provider="bedrock",
     #     initial_message=BaseMessage(text=initial_message),
     #     prompt_preamble=prompt,
     #     temperature=0.5,
     #     interrupt_sensitivity=interrupt_sensitivity,
-    #     # actions=[LogToConsoleActionConfig(type="action_log_message_to_console")],
-    #     end_conversation_on_goodbye=True,
-    #     goodbye_phrases=["bye"],
-    #     azure_params=AzureOpenAIConfig(
-    #         openai_model_name="gpt-35-turbo-0125",
-    #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    #         base_url=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    #         region="southindia",
-    #         deployment_name="olive-ai",
-    #         api_version="2024-06-01",
-    #     ),
     # )
+
+    agent_config = ChatGPTAgentConfig(
+        initial_message=BaseMessage(text=initial_message),
+        prompt_preamble=prompt,
+        temperature=0.5,
+        interrupt_sensitivity=interrupt_sensitivity,
+        # actions=[LogToConsoleActionConfig(type="action_log_message_to_console")],
+        end_conversation_on_goodbye=True,
+        goodbye_phrases=["bye"],
+        azure_params=AzureOpenAIConfig(
+            openai_model_name="gpt-35-turbo-0125",
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            base_url=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            region="southindia",
+            deployment_name="olive-ai",
+            api_version="2024-06-01",
+        ),
+    )
 
     conversation_id = create_conversation_id()
     telephony_params = {

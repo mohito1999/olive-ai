@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -17,6 +18,8 @@ class CallDBInputSchema(BaseSchema):
     to_number: str
     status: str
     retry_count: int
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
     duration: Optional[int] = None
     recording_url: Optional[str] = None
     transcript: Optional[str] = None
@@ -47,6 +50,8 @@ class CallResponse(BaseSchema):
     to_number: str
     status: str
     retry_count: int
+    start_time: Optional[datetime]
+    end_time: Optional[datetime]
     duration: Optional[int]
     recording_url: Optional[str]
     transcript: Optional[str]

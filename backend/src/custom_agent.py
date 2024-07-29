@@ -285,7 +285,7 @@ class CustomAgentFactory(AbstractAgentFactory):
                 model=agent_config.model_name,
                 model_provider=agent_config.provider,
                 temperature=agent_config.temperature,
-                # max_tokens=agent_config.max_tokens,
+                max_tokens=agent_config.max_tokens,
                 # location="asia-south1",
             )
             tools = [search_the_internet]

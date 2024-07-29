@@ -2,31 +2,27 @@ import asyncio
 import io
 import wave
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from typing import Any, Type
 
 import google.auth
 from google.cloud import texttospeech_v1beta1 as tts  # type: ignore
-
 from vocode.streaming.models.message import BaseMessage
-from vocode.streaming.synthesizer.base_synthesizer import (
-    BaseSynthesizer,
-    SynthesisResult,
-)
-from vocode.streaming.synthesizer.abstract_factory import AbstractSynthesizerFactory
-
-from typing import Type
 from vocode.streaming.models.synthesizer import (
     AzureSynthesizerConfig,
-    GoogleSynthesizerConfig,
     CartesiaSynthesizerConfig,
     ElevenLabsSynthesizerConfig,
+    GoogleSynthesizerConfig,
     PlayHtSynthesizerConfig,
     RimeSynthesizerConfig,
     StreamElementsSynthesizerConfig,
     SynthesizerConfig,
 )
+from vocode.streaming.synthesizer.abstract_factory import AbstractSynthesizerFactory
 from vocode.streaming.synthesizer.azure_synthesizer import AzureSynthesizer
-
+from vocode.streaming.synthesizer.base_synthesizer import (
+    BaseSynthesizer,
+    SynthesisResult,
+)
 from vocode.streaming.synthesizer.cartesia_synthesizer import CartesiaSynthesizer
 from vocode.streaming.synthesizer.eleven_labs_synthesizer import ElevenLabsSynthesizer
 from vocode.streaming.synthesizer.eleven_labs_websocket_synthesizer import (

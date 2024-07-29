@@ -203,26 +203,24 @@ class CustomTelephonyServer(TelephonyServer):
         ):
             outbound_call_config = await self.config_manager.get_config(conversation_id)
 
-            call_config = ExotelCallConfig(
-                transcriber_config=outbound_call_config.transcriber_config
-                or inbound_call_config.transcriber_config
-                or ExotelCallConfig.default_transcriber_config(),
-                agent_config=outbound_call_config.agent_config or inbound_call_config.agent_config,
-                synthesizer_config=outbound_call_config.synthesizer_config
-                or inbound_call_config.synthesizer_config
-                or ExotelCallConfig.default_synthesizer_config(),
-                exotel_config=exotel_config,
-                exotel_sid=exotel_sid,
-                from_phone=exotel_from,
-                to_phone=exotel_to,
-                direction="inbound",
-            )
-            inbound_conversation_id = f"{conversation_id}_inbound"
-            logger.debug(f"Saving config for conversation_id {inbound_conversation_id}")
-            await self.config_manager.save_config(inbound_conversation_id, call_config)
+            if not outbound_call_config:
+                call_config = ExotelCallConfig(
+                    transcriber_config=inbound_call_config.transcriber_config
+                    or ExotelCallConfig.default_transcriber_config(),
+                    agent_config=inbound_call_config.agent_config,
+                    synthesizer_config=inbound_call_config.synthesizer_config
+                    or ExotelCallConfig.default_synthesizer_config(),
+                    exotel_config=exotel_config,
+                    exotel_sid=exotel_sid,
+                    from_phone=exotel_from,
+                    to_phone=exotel_to,
+                    direction="inbound",
+                )
+                logger.debug(f"Saving config for conversation_id {conversation_id}")
+                await self.config_manager.save_config(conversation_id, call_config)
             return ExotelClient.create_call_exotel(
                 base_url=self.base_url,
-                conversation_id=inbound_conversation_id,
+                conversation_id=conversation_id,
             )
 
         async def vonage_route(vonage_config: VonageConfig, request: Request):

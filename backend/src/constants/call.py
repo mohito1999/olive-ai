@@ -8,6 +8,7 @@ class CallType(str, Enum):
 
 class CallStatus(str, Enum):
     PENDING = "PENDING"
+    INITIATED = "INITIATED"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
