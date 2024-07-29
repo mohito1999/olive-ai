@@ -29,6 +29,7 @@ FROM python:3.10-slim as deployment
 
 WORKDIR /app
 RUN apt-get update && apt-get install -y ffmpeg libportaudio2 && rm -rf /var/lib/apt/lists/*
+RUN pip install nltk && python -c "import nltk; nltk.download('punkt')"
 
 COPY --from=dependencies /app/venv ./venv
 
