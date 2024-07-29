@@ -11,6 +11,7 @@ import config
 # DO NOT REMOVE
 import llama_monkey_patch
 from constants import DEFAULT_PROMPT
+from custom_event_manager import CustomEventsManager
 from custom_telephony_server import CustomTelephonyServer
 from exceptions import add_exception_handlers
 from log import log
@@ -89,6 +90,7 @@ telephony_server = CustomTelephonyServer(
             exotel_config=EXOTEL_CONFIG,
         )
     ],
+    events_manager=CustomEventsManager(),
 )
 app.include_router(telephony_server.get_router(), include_in_schema=False)
 
