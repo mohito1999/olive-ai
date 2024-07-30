@@ -8,6 +8,7 @@ import {
     FormLabel,
     FormMessage
 } from "@/components/ui/form";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -18,8 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import * as z from "zod";
 import { useState } from "react";
-import { backendAxiosInstance } from "@/lib/axios";
-import { createClient } from "@/utils/supabase/client";
+import { requestOliveBackendWithAuth } from "@/lib/axios";
 
 const callSchema = z.object({
     mobile_number: z.string().min(10, { message: "Please enter a valid mobile number" }),
@@ -51,13 +51,7 @@ const breadcrumbItems = [{ title: "Test call", link: "/test-call" }];
 
 export default function Page() {
     const { toast } = useToast();
-    const supabase = createClient();
     const [loading, setLoading] = useState(false);
-
-    const getSession = async () => {
-        const { data } = await supabase.auth.getSession();
-        return data.session;
-    };
 
     const form = useForm<CallFormValues>({
         resolver: zodResolver(callSchema),
@@ -67,17 +61,11 @@ export default function Page() {
     const processForm: SubmitHandler<CallFormValues> = async (formData) => {
         setLoading(true);
 
-        const sessionData = await getSession();
-        if (!sessionData) {
-            return;
-        }
-
-        const headers = {
-            Authorization: `Bearer ${sessionData.access_token}`
-        };
-
-        backendAxiosInstance
-            .post("/v1/calls/outbound", formData, { headers })
+        requestOliveBackendWithAuth({
+            method: "POST",
+            url: "/calls/outbound",
+            data: formData
+        })
             .then((res) => {
                 toast({
                     title: "Call initiated",
@@ -105,6 +93,7 @@ export default function Page() {
                     title="Test call"
                     description="Make a call to your mobile number to test the Olive AI agent"
                 />
+                <Separator />
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(processForm)} className="w-full space-y-4">
                         <div className="gap-8 md:grid md:grid-cols-2">
@@ -219,10 +208,7 @@ export default function Page() {
                                     <FormItem>
                                         <FormLabel>Synthesizer provider</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                disabled={loading}
-                                                {...field}
-                                            />
+                                            <Input disabled={loading} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
