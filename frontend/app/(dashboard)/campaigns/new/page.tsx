@@ -12,7 +12,7 @@ import { SubmitHandler } from "react-hook-form";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
-export default function page() {
+export default function Page() {
     const supabase = createClient();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);

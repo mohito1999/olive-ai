@@ -12,7 +12,7 @@ import Link from "next/link";
 
 const breadcrumbItems = [{ title: "Campaigns", link: "/campaigns" }];
 
-export default function page() {
+export default function Page() {
     const { data: campaigns, isLoading } = useCampaignsQuery();
 
     return (
@@ -36,7 +36,7 @@ export default function page() {
                 {!isLoading &&
                     campaigns &&
                     campaigns.map((campaign) => (
-                        <Link href={`/campaigns/${campaign.id}`} className="">
+                        <Link href={`/campaigns/${campaign.id}`} key={campaign.id}>
                             <Card>
                                 <CardHeader>
                                     <div className="flex items-start justify-between">

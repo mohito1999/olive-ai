@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { CampaignFormValues } from "@/types/campaign";
 import { SubmitHandler } from "react-hook-form";
 
-export default function page() {
+export default function Page() {
     const params = useParams();
     const campaignId = Array.isArray(params.campaignId) ? params.campaignId[0] : params.campaignId;
     const [isLoading, setIsLoading] = useState(false);
