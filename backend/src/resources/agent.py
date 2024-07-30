@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth import get_current_admin_user
+from auth import get_current_admin_user, get_current_user
 from exceptions import (
     ApplicationException,
     BadRequestException,
@@ -45,7 +45,7 @@ async def create_agent(
 @router.get("", response_model=List[AgentResponse])
 async def list_agents(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_admin_user),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
         log.info("Listing agents")
@@ -60,7 +60,7 @@ async def list_agents(
 @router.get("/{agent_id}", response_model=AgentResponse)
 async def get_agent(
     agent_id: str,
-    current_user: dict = Depends(get_current_admin_user),
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     try:

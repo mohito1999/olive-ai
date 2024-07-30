@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth import get_current_admin_user
+from auth import get_current_admin_user, get_current_user
 from exceptions import (
     ApplicationException,
     BadRequestException,
@@ -50,7 +50,7 @@ async def create_telephony_service(
 @router.get("", response_model=List[TelephonyServiceResponse])
 async def list_telephony_services(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_admin_user),
+    current_user: dict = Depends(get_current_user),
 ):
     try:
         log.info("Listing telephony_services")
@@ -65,7 +65,7 @@ async def list_telephony_services(
 @router.get("/{telephony_service_id}", response_model=TelephonyServiceResponse)
 async def get_telephony_service(
     telephony_service_id: str,
-    current_user: dict = Depends(get_current_admin_user),
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     try:
