@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import BreadCrumb from "@/components/breadcrumb";
 import { CallLogsTable } from "@/components/tables/call-logs-table/call-logs-table";
 import { Heading } from "@/components/ui/heading";
@@ -19,7 +20,9 @@ export default function Page() {
             </div>
             <Separator />
 
-            <CallLogsTable data={calls ?? []} pageCount={1} />
+            <Suspense>
+                <CallLogsTable data={calls ?? []} pageCount={1} />
+            </Suspense>
         </div>
     );
 }
