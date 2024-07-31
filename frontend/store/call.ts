@@ -8,12 +8,12 @@ export const CallService = {
         const response = await requestOliveBackendWithAuth({ url: `/calls`, method: "GET" });
         return response.data;
     },
-    getCall: async (id: string): Promise<Call> => {
+    getCallTranscript: async (id: string): Promise<string|null> => {
         const response = await requestOliveBackendWithAuth({
-            url: `/calls/${id}`,
+            url: `/calls/${id}/transcript`,
             method: "GET"
         });
-        return response.data;
+        return response.data.transcript;
     }
 };
 
@@ -24,9 +24,12 @@ export const useCallsQuery = () => {
     });
 };
 
-export const useCallQuery = (id: string) => {
-    return useQuery<Call>({
-        queryKey: ["call", id],
-        queryFn: () => CallService.getCall(id),
+export const useCallTranscriptQuery = (
+    id: string
+) => {
+    return useQuery<string|null>({
+        queryKey: ["call", "transcript", id],
+        queryFn: () => CallService.getCallTranscript(id),
+        enabled: false
     });
 };

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { usePathname } from "next/navigation";
+import { useUser } from "@/hooks/useUser";
 
 import { Icons } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -19,8 +19,7 @@ interface DashboardNavProps {
 }
 
 export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardNavProps) {
-    const router = useRouter();
-    const supabase = createClient();
+    const { logout } = useUser();
 
     const path = usePathname();
     const { isMinimized } = useSidebar();
@@ -28,11 +27,6 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
     if (!items?.length) {
         return null;
     }
-
-    const handleLogoutClick = async () => {
-        await supabase.auth.signOut();
-        router.push("/login");
-    };
 
     return (
         <nav className="grid items-start gap-2">
@@ -47,7 +41,9 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
                                         href={item.disabled ? "/" : item.href}
                                         className={cn(
                                             "flex items-center gap-2 overflow-hidden rounded-md py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                                            item.href != "/" && path.startsWith(item.href) ? "bg-accent" : "transparent",
+                                            item.href != "/" && path.startsWith(item.href)
+                                                ? "bg-accent"
+                                                : "transparent",
                                             item.disabled && "cursor-not-allowed opacity-80"
                                         )}
                                         onClick={() => {
@@ -82,8 +78,8 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
                     <TooltipTrigger asChild>
                         <Button
                             variant="ghost"
-                            className="text-left flex items-center gap-2 overflow-hidden rounded-md py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                            onClick={handleLogoutClick}
+                            className="flex items-center gap-2 overflow-hidden rounded-md py-2 text-left text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                            onClick={logout}
                         >
                             <Icons.login className={`ml-3 size-5`} />
 

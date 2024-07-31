@@ -116,11 +116,14 @@ export const navItems: NavItem[] = [
         href: "/call-logs",
         icon: "phone",
         label: "Call logs"
-    },
+    }
+];
+
+export const adminNavItems: NavItem[] = [
     {
         title: "Test call",
         href: "/test-call",
-        icon: "page",
+        icon: "chevronRight",
         label: "Test call"
     }
 ];

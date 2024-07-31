@@ -480,7 +480,7 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit, buttonText }: prop
         <Button
           type="submit"
           className="flex justify-center"
-          size={"lg"}
+          size="default"
           disabled={isLoading}
         >
           {buttonText ?? "Submit"}

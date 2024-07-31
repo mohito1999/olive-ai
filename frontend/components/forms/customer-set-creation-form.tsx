@@ -179,7 +179,7 @@ export const CustomerSetCreationForm = () => {
         <Button
           type="submit"
           className="flex justify-center"
-          size={"lg"}
+          size="default"
           disabled={isLoading}
         >
           Create

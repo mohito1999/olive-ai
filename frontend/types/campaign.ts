@@ -1,12 +1,27 @@
 import { z } from "zod";
 import { zodConfigJson } from "@/lib/utils";
 
+export const campaignStatus = {
+    IDLE: "IDLE",
+    RUNNING: "RUNNING"
+} as const;
+
+export type CampaignStatus = (typeof campaignStatus)[keyof typeof campaignStatus];
+
+export const campaignAction = {
+    START: "START",
+    STOP: "STOP",
+    TEST: "TEST"
+} as const;
+
+export type CampaignAction = (typeof campaignAction)[keyof typeof campaignAction];
+
 export type CreateCampaign = {
     organization_id: string;
     name: string;
     description: string | null;
     type: string;
-    status: string;
+    status: CampaignStatus;
     prompt: string;
     initial_message: string;
     max_duration: number;
@@ -28,6 +43,15 @@ export type Campaign = CreateCampaign & {
     customer_sets: string[];
 };
 
+export type ExecuteCampaignRequest = {
+    action: CampaignAction;
+    customer_id?: string;
+};
+
+export type ExecuteCampaignResponse = {
+    message: string;
+};
+
 export const campaignFormSchema = z.object({
     name: z.string().min(2, { message: "Please enter a valid name" }),
     description: z.string().nullable(),
@@ -44,7 +68,7 @@ export const campaignFormSchema = z.object({
     agent_config: zodConfigJson,
     synthesizer_id: z.string().nullable(),
     synthesizer_config: zodConfigJson,
-    customer_sets: z.array(z.string()),
+    customer_sets: z.array(z.string())
 });
 
 export type CampaignFormValues = z.infer<typeof campaignFormSchema>;

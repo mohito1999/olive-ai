@@ -142,7 +142,7 @@ export const CustomerSetUpdationForm = ({ customerSet }: Props) => {
         <Button
           type="submit"
           className="flex justify-center"
-          size={"lg"}
+          size="default"
           disabled={isLoading}
         >
           Update

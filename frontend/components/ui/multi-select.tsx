@@ -274,8 +274,6 @@ const MultiSelectorItem = forwardRef<
     e.preventDefault();
     e.stopPropagation();
   }, []);
-
-  console.log(Options)
  
   const isIncluded = Options.includes(value);
   return (

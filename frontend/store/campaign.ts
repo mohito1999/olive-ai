@@ -2,7 +2,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { requestOliveBackendWithAuth } from "@/lib/axios";
 import { queryClient } from "@/lib/query";
-import { Campaign, CreateCampaign } from "@/types/campaign";
+import {
+    Campaign,
+    CreateCampaign,
+    ExecuteCampaignRequest,
+    ExecuteCampaignResponse
+} from "@/types/campaign";
 
 export const CampaignService = {
     createCampaign: async (payload: CreateCampaign): Promise<Campaign> => {
@@ -29,6 +34,17 @@ export const CampaignService = {
             url: `/campaigns/${id}`,
             data: payload,
             method: "PATCH"
+        });
+        return response.data;
+    },
+    executeCampaign: async (
+        id: string,
+        payload: ExecuteCampaignRequest
+    ): Promise<ExecuteCampaignResponse> => {
+        const response = await requestOliveBackendWithAuth({
+            url: `/campaigns/${id}/execute`,
+            data: payload,
+            method: "POST"
         });
         return response.data;
     }
@@ -62,6 +78,14 @@ export const updateCampaignMutation = (id: string) => {
     return useMutation({
         mutationFn: (updatedCampaign: Partial<Campaign>) =>
             CampaignService.updateCampaign(id, updatedCampaign),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaign", id] })
+    });
+};
+
+export const executeCampaignMutation = (id: string) => {
+    return useMutation({
+        mutationFn: (payload: ExecuteCampaignRequest) =>
+            CampaignService.executeCampaign(id, payload),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaign", id] })
     });
 };

@@ -46,7 +46,7 @@ export const createCustomerMutation = () => {
 
 export const useCustomersQuery = (customerSetId: string) => {
     return useQuery<Customer[]>({
-        queryKey: ["customers", "customerSetId", customerSetId],
+        queryKey: ["customers", "customer_set_id", customerSetId],
         queryFn: () => CustomerService.listCustomers(customerSetId)
     });
 };
@@ -57,10 +57,10 @@ export const useCustomerQuery = (customerSetId: string, id: string) => {
         queryFn: () => CustomerService.getCustomer(id),
         initialData: () =>
             queryClient
-                .getQueryData<Customer[]>(["customers", "customerSetId", customerSetId])
+                .getQueryData<Customer[]>(["customers", "customer_set_id", customerSetId])
                 ?.find((c) => c.id === id),
         initialDataUpdatedAt: () =>
-            queryClient.getQueryState(["customers", "customerSetId", customerSetId])?.dataUpdatedAt
+            queryClient.getQueryState(["customers", "customer_set_id", customerSetId])?.dataUpdatedAt
     });
 };
 
