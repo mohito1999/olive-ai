@@ -8,7 +8,7 @@ export const SynthesizerService = {
     createSynthesizer: async (payload: CreateSynthesizer): Promise<Synthesizer> => {
         const response = await requestOliveBackendWithAuth({
             url: `/synthesizers`,
-            payload,
+            data: payload,
             method: "POST"
         });
         return response.data;
@@ -27,7 +27,7 @@ export const SynthesizerService = {
     updateSynthesizer: async (id: string, payload: Partial<Synthesizer>): Promise<Synthesizer> => {
         const response = await requestOliveBackendWithAuth({
             url: `/synthesizers/${id}`,
-            payload,
+            data: payload,
             method: "PATCH"
         });
         return response.data;

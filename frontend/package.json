@@ -52,6 +52,7 @@
         "axios": "^1.7.2",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.0.0",
+        "cmdk": "^1.0.0",
         "date-fns": "^2.30.0",
         "eslint": "8.48.0",
         "eslint-config-next": "^14.0.1",

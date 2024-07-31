@@ -57,12 +57,9 @@ export default function Page() {
                 <div className="flex items-start justify-between">
                     <div>
                         <Heading title={campaign ? campaign.name : ""} description="" />
-                        <span className="text-xs">
-                            ID:{" "}
-                            <code className="rounded bg-muted p-1 text-foreground">
-                                {campaignId}
-                            </code>
-                        </span>
+                        <code className="rounded bg-muted p-1 text-xs text-foreground">
+                            {campaignId}
+                        </code>
                     </div>
                     {campaign && <Badge variant="outline">{campaign.status}</Badge>}
                 </div>
@@ -72,6 +69,7 @@ export default function Page() {
                         campaign={campaign}
                         isLoading={isLoading}
                         onSubmit={handleFormSubmit}
+                        buttonText="Update"
                     />
                 )}
             </div>

@@ -8,7 +8,7 @@ export const TelephonyServiceService = {
     createTelephonyService: async (payload: CreateTelephonyService): Promise<TelephonyService> => {
         const response = await requestOliveBackendWithAuth({
             url: `/telephony-services`,
-            payload,
+            data: payload,
             method: "POST"
         });
         return response.data;
@@ -27,7 +27,7 @@ export const TelephonyServiceService = {
     updateTelephonyService: async (id: string, payload: Partial<TelephonyService>): Promise<TelephonyService> => {
         const response = await requestOliveBackendWithAuth({
             url: `/telephony-services/${id}`,
-            payload,
+            data: payload,
             method: "PATCH"
         });
         return response.data;

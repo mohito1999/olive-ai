@@ -8,7 +8,7 @@ export const AgentService = {
     createAgent: async (payload: CreateAgent): Promise<Agent> => {
         const response = await requestOliveBackendWithAuth({
             url: `/agents`,
-            payload,
+            data: payload,
             method: "POST"
         });
         return response.data;
@@ -27,7 +27,7 @@ export const AgentService = {
     updateAgent: async (id: string, payload: Partial<Agent>): Promise<Agent> => {
         const response = await requestOliveBackendWithAuth({
             url: `/agents/${id}`,
-            payload,
+            data: payload,
             method: "PATCH"
         });
         return response.data;

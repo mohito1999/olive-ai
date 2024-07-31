@@ -19,6 +19,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import {
+  MultiSelector,
+  MultiSelectorContent,
+  MultiSelectorInput,
+  MultiSelectorItem,
+  MultiSelectorList,
+  MultiSelectorTrigger
+} from "@/components/ui/multi-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +35,7 @@ import { useAgentsQuery } from "@/store/agent";
 import { useSynthesizersQuery } from "@/store/synthesizer";
 import { useTranscribersQuery } from "@/store/transcriber";
 import { useTelephonyServicesQuery } from "@/store/telephony_service";
+import { useCustomerSetsQuery } from "@/store/customer_set";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -34,20 +43,32 @@ type props = {
   campaign?: Campaign;
   isLoading: boolean;
   onSubmit: (values: CampaignFormValues) => void;
+  buttonText?: string;
 };
 
-export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
+export const CampaignForm = ({ campaign, isLoading, onSubmit, buttonText }: props) => {
   const { data: agents } = useAgentsQuery();
   const { data: synthesizers } = useSynthesizersQuery();
   const { data: transcribers } = useTranscribersQuery();
   const { data: telephonyServices } = useTelephonyServicesQuery();
+  const { data: customerSets } = useCustomerSetsQuery();
 
   const defaultValues = campaign
     ? Object.fromEntries(
       Object.entries(campaign).map(([key, value]) => {
-        return typeof value === "object" && value !== null
-          ? [key, JSON.stringify(value)]
-          : [key, value];
+        if (value === null) {
+          return [key, null];
+        } else if (key === "customer_sets") {
+          return [key, (value as { id: string }[]).map((item) => item.id)];
+        } else if (
+          key === "telephony_service_config" ||
+          key === "transcriber_config" ||
+          key === "agent_config" ||
+          key === "synthesizer_config"
+        ) {
+          return [key, JSON.stringify(value, null, 2)];
+        }
+        return [key, value];
       })
     )
     : {
@@ -62,7 +83,8 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
       agent_id: null,
       agent_config: null,
       synthesizer_id: null,
-      synthesizer_config: null
+      synthesizer_config: null,
+      customer_sets: []
     };
 
   const form = useForm<CampaignFormValues>({
@@ -189,6 +211,33 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="customer_sets"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Customer sets</FormLabel>
+                <MultiSelector onValuesChange={field.onChange} values={field.value}>
+                  <FormControl>
+                    <MultiSelectorTrigger>
+                      <MultiSelectorInput placeholder="Select customer sets for this campaign" />
+                    </MultiSelectorTrigger>
+                  </FormControl>
+                  <MultiSelectorContent>
+                    <MultiSelectorList>
+                      {customerSets?.map((item) => (
+                        <MultiSelectorItem key={item.id} value={item.id}>
+                          {item.name} ({item.id})
+                        </MultiSelectorItem>
+                      ))}
+                    </MultiSelectorList>
+                  </MultiSelectorContent>
+                </MultiSelector>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <Accordion
             type="single"
             collapsible
@@ -239,7 +288,7 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
                           <FormLabel>Telephony service config</FormLabel>
                           <FormControl>
                             <pre
-                              className="rounded-md bg-gray-100 p-2 text-xs"
+                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
                               contentEditable={!isLoading}
                               suppressContentEditableWarning={true}
                               onBlur={(e) =>
@@ -296,7 +345,7 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
                           <FormLabel>Transcriber config</FormLabel>
                           <FormControl>
                             <pre
-                              className="rounded-md bg-gray-100 p-2 text-xs"
+                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
                               contentEditable={!isLoading}
                               suppressContentEditableWarning={true}
                               onBlur={(e) =>
@@ -353,7 +402,7 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
                           <FormLabel>Agent config</FormLabel>
                           <FormControl>
                             <pre
-                              className="rounded-md bg-gray-100 p-2 text-xs"
+                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
                               contentEditable={!isLoading}
                               suppressContentEditableWarning={true}
                               onBlur={(e) =>
@@ -410,7 +459,7 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
                           <FormLabel>Synthesizer config</FormLabel>
                           <FormControl>
                             <pre
-                              className="rounded-md bg-gray-100 p-2 text-xs"
+                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
                               contentEditable={!isLoading}
                               suppressContentEditableWarning={true}
                               onBlur={(e) =>
@@ -439,7 +488,7 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit }: props) => {
           size={"lg"}
           disabled={isLoading}
         >
-          Save
+          {buttonText ?? "Submit"}
         </Button>
       </form>
     </Form>

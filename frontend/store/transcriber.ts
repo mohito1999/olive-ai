@@ -8,7 +8,7 @@ export const TranscriberService = {
     createTranscriber: async (payload: CreateTranscriber): Promise<Transcriber> => {
         const response = await requestOliveBackendWithAuth({
             url: `/transcribers`,
-            payload,
+            data: payload,
             method: "POST"
         });
         return response.data;
@@ -27,7 +27,7 @@ export const TranscriberService = {
     updateTranscriber: async (id: string, payload: Partial<Transcriber>): Promise<Transcriber> => {
         const response = await requestOliveBackendWithAuth({
             url: `/transcribers/${id}`,
-            payload,
+            data: payload,
             method: "PATCH"
         });
         return response.data;

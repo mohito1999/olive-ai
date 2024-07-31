@@ -25,27 +25,26 @@ export type CreateCampaign = {
 
 export type Campaign = CreateCampaign & {
     id: string;
-    customer_sets: object[];
+    customer_sets: string[];
 };
 
 export const campaignFormSchema = z.object({
-  name: z.string().min(2, { message: "Please enter a valid name" }),
-  description: z.string().nullable(),
-  type: z.string().min(2, { message: "Please enter a valid type" }),
-  prompt: z.string().min(2, { message: "Please enter a valid prompt" }),
-  initial_message: z.string(),
-  // max_duration: z.number().int().positive(),
-  // max_retries: z.number().int().positive(),
-  telephony_service_id: z.string().nullable(),
-  telephony_service_config: zodConfigJson,
-  transcriber_id: z.string().nullable(),
-  transcriber_config: zodConfigJson,
-  agent_id: z.string().nullable(),
-  agent_config: zodConfigJson,
-  synthesizer_id: z.string().nullable(),
-  synthesizer_config: zodConfigJson
-  // customer_sets: z.array(z.string()).optional()
+    name: z.string().min(2, { message: "Please enter a valid name" }),
+    description: z.string().nullable(),
+    type: z.string().min(2, { message: "Please enter a valid type" }),
+    prompt: z.string().min(2, { message: "Please enter a valid prompt" }),
+    initial_message: z.string(),
+    // max_duration: z.number().int().positive(),
+    // max_retries: z.number().int().positive(),
+    telephony_service_id: z.string().nullable(),
+    telephony_service_config: zodConfigJson,
+    transcriber_id: z.string().nullable(),
+    transcriber_config: zodConfigJson,
+    agent_id: z.string().nullable(),
+    agent_config: zodConfigJson,
+    synthesizer_id: z.string().nullable(),
+    synthesizer_config: zodConfigJson,
+    customer_sets: z.array(z.string()),
 });
 
 export type CampaignFormValues = z.infer<typeof campaignFormSchema>;
-

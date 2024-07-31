@@ -69,7 +69,7 @@ export default function Page() {
                 <BreadCrumb
                     items={[
                         { title: "Campaigns", link: "/campaigns" },
-                        { title: "Create campaign", link: "/campaigns/new" }
+                        { title: "New campaign", link: "/campaigns/new" }
                     ]}
                 />
 
@@ -77,7 +77,11 @@ export default function Page() {
                     <Heading title="Create campaign" description="" />
                 </div>
                 <Separator />
-                <CampaignForm isLoading={isLoading} onSubmit={handleFormSubmit} />
+                <CampaignForm
+                    isLoading={isLoading}
+                    onSubmit={handleFormSubmit}
+                    buttonText="Create"
+                />
             </div>
         </ScrollArea>
     );

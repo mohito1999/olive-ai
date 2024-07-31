@@ -1,4 +1,4 @@
-export type Call = {
+export type ListCall = {
     id: string;
     organization_id: string;
     campaign_id: string;
@@ -12,6 +12,9 @@ export type Call = {
     end_time: Date | null;
     duration: number | null;
     recording_url: string | null;
+};
+
+export type Call = ListCall & {
     transcript: string | null;
     actions: object | null;
 };

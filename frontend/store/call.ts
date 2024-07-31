@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { requestOliveBackendWithAuth } from "@/lib/axios";
-import { queryClient } from "@/lib/query";
-import { Call } from "@/types/call";
+import { Call, ListCall } from "@/types/call";
 
 export const CallService = {
-    listCalls: async (): Promise<Call[]> => {
+    listCalls: async (): Promise<ListCall[]> => {
         const response = await requestOliveBackendWithAuth({ url: `/calls`, method: "GET" });
         return response.data;
     },
@@ -19,7 +18,7 @@ export const CallService = {
 };
 
 export const useCallsQuery = () => {
-    return useQuery<Call[]>({
+    return useQuery<ListCall[]>({
         queryKey: ["calls"],
         queryFn: () => CallService.listCalls()
     });
@@ -29,8 +28,5 @@ export const useCallQuery = (id: string) => {
     return useQuery<Call>({
         queryKey: ["call", id],
         queryFn: () => CallService.getCall(id),
-        initialData: () =>
-            queryClient.getQueryData<Call[]>(["calls"])?.find((c) => c.id === id),
-        initialDataUpdatedAt: () => queryClient.getQueryState(["calls"])?.dataUpdatedAt
     });
 };
