@@ -1,6 +1,6 @@
 from typing import Optional
 
-from constants import CampaignStatus, CampaignType
+from constants import CampaignStatus, CampaignType, CampaignAction
 
 from .base import BaseSchema
 from .customer_set import CustomerSetDBSchema
@@ -42,7 +42,7 @@ class CreateCampaignRequest(BaseSchema):
     name: Optional[str] = None
     description: Optional[str] = None
     type: CampaignType
-    status: Optional[CampaignStatus] = CampaignStatus.DRAFT
+    status: Optional[CampaignStatus] = CampaignStatus.IDLE
     prompt: str
     initial_message: str
     max_duration: int
@@ -68,7 +68,7 @@ class UpdateCampaignRequest(BaseSchema):
     name: Optional[str] = None
     description: Optional[str] = None
     type: Optional[CampaignType] = None
-    status: Optional[CampaignStatus] = None
+    # status: Optional[CampaignStatus] = None
     prompt: Optional[str] = None
     initial_message: Optional[str] = None
     max_duration: Optional[int] = None
@@ -85,10 +85,10 @@ class UpdateCampaignRequest(BaseSchema):
     customer_sets: Optional[list[str]] = None
 
 
-class TestCampaignRequest(BaseSchema):
-    customer_id: str
+class ExecuteCampaignRequest(BaseSchema):
+    action: CampaignAction
+    customer_id: Optional[str] = None
 
 
-class TestCampaignResponse(BaseSchema):
-    call_id: str
+class ExecuteCampaignResponse(BaseSchema):
     message: str

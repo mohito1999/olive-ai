@@ -112,11 +112,12 @@ async def update_customer(
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Updating customer for customer_id: '{customer_id}'")
-        customer = await CustomerRepository(db).update(
+        await CustomerRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=customer_id,
             organization_id=current_user_organization_id,
         )
+        customer = await CustomerRepository(db).get(id=customer_id)
         return CustomerResponse(**customer.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)

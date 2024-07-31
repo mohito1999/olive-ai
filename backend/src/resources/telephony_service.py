@@ -90,10 +90,11 @@ async def update_telephony_service(
     current_user_id = current_user.get("sub")
     try:
         log.info(f"Updating telephony_service for telephony_service_id: '{telephony_service_id}'")
-        telephony_service = await TelephonyServiceRepository(db).update(
+        await TelephonyServiceRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=telephony_service_id,
         )
+        telephony_service = await TelephonyServiceRepository(db).get(id=telephony_service_id)
         return TelephonyServiceResponse(**telephony_service.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)

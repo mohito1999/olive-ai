@@ -80,10 +80,11 @@ async def create_customer_set(
             )
             log.debug(response.json())
 
-            customer_set = await CustomerSetRepository(db).update(
+            await CustomerSetRepository(db).update(
                 values={"url": path},
                 id=customer_set.id,
             )
+            customer_set = await CustomerSetRepository(db).get(id=customer_set.id)
 
             process_csv_file_task.apply_async((customer_set.id,))
         return CustomerSetResponse(**customer_set.dict())
@@ -161,12 +162,13 @@ async def update_customer_set(
     current_user_id = current_user.get("sub")
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
-        log.info(f"Updating customer_set for customer_set_id: '{customer_set_id}'")
-        customer_set = await CustomerSetRepository(db).update(
+        log.info(f"Updating customer_set_id: '{customer_set_id}'")
+        await CustomerSetRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=customer_set_id,
             organization_id=current_user_organization_id,
         )
+        customer_set = await CustomerSetRepository(db).get(id=customer_set_id)
         return CustomerSetResponse(**customer_set.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)

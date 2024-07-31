@@ -83,7 +83,7 @@ async def start_outbound_call(
             api_key=os.getenv("ELEVEN_LABS_API_KEY"),
             voice_id=voice,
             model_id="eleven_turbo_v2_5",
-            stability=0.7,
+            stability=1,
             # experimental_websocket=True,
             # experimental_streaming=True,
             optimize_streaming_latency=3,

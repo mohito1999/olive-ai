@@ -90,10 +90,11 @@ async def update_synthesizer(
     current_user_id = current_user.get("sub")
     try:
         log.info(f"Updating synthesizer for synthesizer_id: '{synthesizer_id}'")
-        synthesizer = await SynthesizerRepository(db).update(
+        await SynthesizerRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=synthesizer_id,
         )
+        synthesizer = await SynthesizerRepository(db).get(id=synthesizer_id)
         return SynthesizerResponse(**synthesizer.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)

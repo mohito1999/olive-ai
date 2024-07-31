@@ -90,10 +90,11 @@ async def update_organization(
     current_user_id = current_user.get("sub")
     try:
         log.info(f"Updating organization for organization_id: '{organization_id}'")
-        organization = await OrganizationRepository(db).update(
+        await OrganizationRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=organization_id,
         )
+        organization = await OrganizationRepository(db).get(id=organization_id)
         return OrganizationResponse(**organization.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)

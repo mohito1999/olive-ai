@@ -4,10 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import get_current_user
-from constants import (
-    CallStatus,
-    CallType,
-)
+from constants import CallStatus, CampaignAction, CampaignStatus
 from exceptions import (
     ApplicationException,
     BadRequestException,
@@ -16,28 +13,24 @@ from exceptions import (
     RecordIntegrityException,
     RecordNotFoundException,
 )
-from jobs import make_outbound_call_task
+from jobs import execute_campaign_task
 from log import log
 from models import get_db
 from repositories import (
-    AgentRepository,
     CallRepository,
     CampaignCustomerSetRepository,
     CampaignRepository,
     CustomerRepository,
     OrganizationRepository,
-    SynthesizerRepository,
-    TelephonyServiceRepository,
-    TranscriberRepository,
 )
 from schemas import (
-    CallDBInputSchema,
     CampaignCustomerSetDBInputSchema,
     CampaignDBInputSchema,
+    CampaignDBNoRelSchema,
     CampaignResponse,
     CreateCampaignRequest,
-    TestCampaignRequest,
-    TestCampaignResponse,
+    ExecuteCampaignRequest,
+    ExecuteCampaignResponse,
     UpdateCampaignRequest,
 )
 
@@ -120,7 +113,9 @@ async def get_campaign(
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Getting campaign for campaign_id: '{campaign_id}'")
-        item = await CampaignRepository(db).get(id=campaign_id, organization_id=current_user_organization_id)
+        item = await CampaignRepository(db).get(
+            id=campaign_id, organization_id=current_user_organization_id
+        )
         return CampaignResponse(**item.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)
@@ -142,7 +137,9 @@ async def update_campaign(
     try:
         log.info(f"Updating campaign_id: '{campaign_id}'")
 
-        campaign = await CampaignRepository(db).get(id=campaign_id, organization_id=current_user_organization_id)
+        campaign = await CampaignRepository(db).get(
+            id=campaign_id, organization_id=current_user_organization_id
+        )
 
         if payload.customer_sets is not None:
             await CampaignCustomerSetRepository(db).delete(
@@ -160,7 +157,7 @@ async def update_campaign(
             if len(entries) > 0:
                 await CampaignCustomerSetRepository(db).bulk_create(entries)
 
-        campaign = await CampaignRepository(db).update(
+        await CampaignRepository(db).update(
             values={
                 **{
                     **payload.dict(exclude_none=True, exclude="customer_sets"),
@@ -169,6 +166,7 @@ async def update_campaign(
             },
             id=campaign_id,
         )
+        campaign = await CampaignRepository(db).get(id=campaign_id)
         return CampaignResponse(**campaign.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)
@@ -178,10 +176,10 @@ async def update_campaign(
         raise InternalServerException(e)
 
 
-@router.post("/{campaign_id}/test", response_model=TestCampaignResponse)
-async def test_campaign(
+@router.post("/{campaign_id}/execute", response_model=ExecuteCampaignResponse)
+async def execute_campaign(
     campaign_id: str,
-    payload: TestCampaignRequest,
+    payload: ExecuteCampaignRequest,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -189,79 +187,61 @@ async def test_campaign(
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
 
     try:
-        log.info(f"Testing campaign_id: '{campaign_id}'")
-
-        campaign = await CampaignRepository(db).get(id=campaign_id, organization_id=current_user_organization_id)
-        if campaign.organization_id != current_user_organization_id:
-            raise BadRequestException(
-                detail=f"User does not belong to organization with id: '{campaign.organization_id}'"
-            )
-
-        organization = await OrganizationRepository(db).get(id=campaign.organization_id)
-
-        telephony_service_id = organization.telephony_service_id
-        telephony_service_config = organization.telephony_service_config
-        agent_id = organization.agent_id
-        agent_config = organization.agent_config
-        transcriber_id = organization.transcriber_id
-        transcriber_config = organization.transcriber_config
-        synthesizer_id = organization.synthesizer_id
-        synthesizer_config = organization.synthesizer_config
-
-        if campaign.telephony_service_id:
-            telephony_service_id = campaign.telephony_service_id
-            telephony_service_config = campaign.telephony_service_config
-
-        if campaign.agent_id:
-            agent_id = campaign.agent_id
-            agent_config = campaign.agent_config
-
-        if campaign.transcriber_id:
-            transcriber_id = campaign.transcriber_id
-            transcriber_config = campaign.transcriber_config
-
-        if campaign.synthesizer_id:
-            synthesizer_id = campaign.synthesizer_id
-            synthesizer_config = campaign.synthesizer_config
-
-        telephony_service = await TelephonyServiceRepository(db).get(id=telephony_service_id)
-        agent = await AgentRepository(db).get(id=agent_id)
-        transcriber = await TranscriberRepository(db).get(id=transcriber_id)
-        synthesizer = await SynthesizerRepository(db).get(id=synthesizer_id)
-
-        telephony_service_config = {**telephony_service.config, **telephony_service_config}
-        agent_config = {**agent.config, **agent_config}
-        transcriber_config = {**transcriber.config, **transcriber_config}
-        synthesizer_config = {**synthesizer.config, **synthesizer_config}
-
-        outbound_caller_number = telephony_service_config.pop("outbound_caller_number")
-        customer = await CustomerRepository(db).get(id=payload.customer_id, organization_id=current_user_organization_id)
-
-        call = await CallRepository(db).create(
-            CallDBInputSchema(
-                organization_id=campaign.organization_id,
-                campaign_id=campaign.id,
-                customer_id=customer.id,
-                type=CallType.OUTBOUND.value,
-                from_number=outbound_caller_number,
-                to_number=customer.mobile_number,
-                status=CallStatus.PENDING.value,
-                retry_count=0,
-                telephony_service_id=telephony_service_id,
-                telephony_service_config=telephony_service_config,
-                agent_id=agent_id,
-                agent_config=agent_config,
-                transcriber_id=transcriber_id,
-                transcriber_config=transcriber_config,
-                synthesizer_id=synthesizer_id,
-                synthesizer_config=synthesizer_config,
-                created_by=current_user_id,
-                updated_by=current_user_id,
-            )
+        campaign = await CampaignRepository(db).get(
+            id=campaign_id, organization_id=current_user_organization_id
         )
 
-        make_outbound_call_task.apply_async((call.id,))
-        return TestCampaignResponse(call_id=call.id, message="Call queued successfully")
+        if payload.action == CampaignAction.TEST.value:
+            if payload.customer_id is None:
+                raise BadRequestException(detail="Customer ID is required to test campaign")
+            log.info(f"Testing campaign_id: '{campaign_id}'")
+            customer = await CustomerRepository(db).get(
+                id=payload.customer_id, organization_id=current_user_organization_id
+            )
+            execute_campaign_task.apply_async(
+                (
+                    campaign.id,
+                    customer.id,
+                )
+            )
+            return ExecuteCampaignResponse(message="Call queued successfully")
+
+        elif payload.action == CampaignAction.START.value:
+            if campaign.status == CampaignStatus.RUNNING.value:
+                raise BadRequestException(detail="Campaign already running")
+
+            log.info(f"Starting campaign_id: '{campaign_id}'")
+            execute_campaign_task.apply_async((campaign.id,))
+
+            campaign.status = CampaignStatus.RUNNING.value
+            campaign.updated_by = current_user_id
+            await CampaignRepository(db).update(
+                CampaignDBNoRelSchema(**campaign.dict()), id=campaign.id
+            )
+
+            return ExecuteCampaignResponse(message="Campaign started successfully")
+
+        elif payload.action == CampaignAction.STOP.value:
+            if campaign.status == CampaignStatus.IDLE.value:
+                raise BadRequestException(detail="Campaign already idle")
+
+            log.info(f"Stopping campaign_id: '{campaign_id}'")
+            try:
+                await CallRepository(db).update(
+                    values={"status": CallStatus.CANCELLED.value, "updated_by": current_user_id},
+                    campaign_id=campaign_id,
+                    status=CallStatus.PENDING.value,
+                )
+            except RecordNotFoundException:
+                pass
+
+            campaign.status = CampaignStatus.IDLE.value
+            campaign.updated_by = current_user_id
+            await CampaignRepository(db).update(
+                CampaignDBNoRelSchema(**campaign.dict()), id=campaign.id
+            )
+            return ExecuteCampaignResponse(message="Campaign stopped successfully")
+
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:
@@ -279,7 +259,9 @@ async def delete_campaign(
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Deleting campaign_id: '{campaign_id}'")
-        await CampaignRepository(db).delete(id=campaign_id, organization_id=current_user_organization_id)
+        await CampaignRepository(db).delete(
+            id=campaign_id, organization_id=current_user_organization_id
+        )
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

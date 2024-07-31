@@ -7,10 +7,14 @@ class CampaignType(str, Enum):
 
 
 class CampaignStatus(str, Enum):
-    DRAFT = "DRAFT"
-    READY = "READY"
+    IDLE = "IDLE"
     RUNNING = "RUNNING"
-    COMPLETED = "COMPLETED"
+
+
+class CampaignAction(str, Enum):
+    START = "START"
+    STOP = "STOP"
+    TEST = "TEST"
 
 
 class TelephonyServiceConfigClass(str, Enum):

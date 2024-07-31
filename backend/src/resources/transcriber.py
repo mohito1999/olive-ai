@@ -90,10 +90,11 @@ async def update_transcriber(
     current_user_id = current_user.get("sub")
     try:
         log.info(f"Updating transcriber for transcriber_id: '{transcriber_id}'")
-        transcriber = await TranscriberRepository(db).update(
+        await TranscriberRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=transcriber_id,
         )
+        transcriber = await TranscriberRepository(db).get(id=transcriber_id)
         return TranscriberResponse(**transcriber.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)

@@ -30,12 +30,10 @@ export default function Page() {
     const handleFormSubmit: SubmitHandler<CampaignFormValues> = async (values) => {
         setIsLoading(true);
         const user = await getUser();
-        console.log(user);
         const organization_id = user?.user_metadata?.organization_id;
         const creationPayload: CreateCampaign = {
             ...values,
             organization_id: organization_id,
-            customer_sets: [],
             max_retries: 0,
             max_duration: 0,
             status: campaignStatus.IDLE,

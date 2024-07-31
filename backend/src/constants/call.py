@@ -9,9 +9,11 @@ class CallType(str, Enum):
 class CallStatus(str, Enum):
     PENDING = "PENDING"
     INITIATED = "INITIATED"
+    TIMEOUT = "TIMEOUT"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
 
 
 DEFAULT_INITIAL_MESSAGE = "Hello, am I speaking to Mohit?"

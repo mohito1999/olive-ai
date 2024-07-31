@@ -85,10 +85,11 @@ async def update_agent(
     current_user_id = current_user.get("sub")
     try:
         log.info(f"Updating agent for agent_id: '{agent_id}'")
-        agent = await AgentRepository(db).update(
+        await AgentRepository(db).update(
             values={**{**payload.dict(exclude_none=True), "updated_by": current_user_id}},
             id=agent_id,
         )
+        agent = await AgentRepository(db).get(id=agent_id)
         return AgentResponse(**agent.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)

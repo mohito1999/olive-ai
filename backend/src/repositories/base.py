@@ -96,6 +96,7 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
         where: Optional[List] = None,
         order_by: Optional[List] = None,
         limit: int = -1,
+        offset: int = 0,
         load_relationships: Optional[List] = None,
         raise_if_no_records: bool = False,
         **filter_query: Any,
@@ -116,6 +117,9 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
 
             if limit > 0:
                 q = q.limit(limit)
+
+            if offset > 0:
+                q = q.offset(offset)
 
             result: Result = await self._db_session.execute(q)
             entries = result.scalars().all()
@@ -208,7 +212,7 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
         where: Optional[List] = None,
         load_relationships: Optional[List] = None,
         **filter_query: Any,
-    ) -> SCHEMA:
+    ) -> int:
         try:
             q = update(self._table)
             if where:
@@ -226,19 +230,7 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
                 raise NoResultFound(f"{self._table.__name__}<{filter_query}> not found")
             await self._db_session.commit()
 
-            q = select(self._table)
-            if where:
-                q = q.where(*where, self._table.deleted_at == None)  # NOSONAR  # noqa
-            else:
-                q = q.filter_by(**filter_query, deleted_at=None)
-
-            if load_relationships:
-                q = q.options(*load_relationships)
-            result: Result = await self._db_session.execute(q)
-            # Switched to first() to make sure we only return one record
-            # TODO: Will switch to support a list later
-            entry = result.scalars().first()
-            return self._schema.from_orm(entry)
+            return cursor_result.rowcount
         except NoResultFound as e:
             raise RecordNotFoundException(e)
         except IntegrityError as e:

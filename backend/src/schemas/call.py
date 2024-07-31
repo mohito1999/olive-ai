@@ -40,6 +40,21 @@ class CallDBSchema(CallDBInputSchema):
     id: str
 
 
+class ListCallsResponse(BaseSchema):
+    id: str
+    organization_id: str
+    campaign_id: str
+    customer_id: str
+    type: str
+    from_number: str
+    to_number: str
+    status: str
+    retry_count: int
+    start_time: Optional[datetime]
+    end_time: Optional[datetime]
+    duration: Optional[int]
+
+
 class CallResponse(BaseSchema):
     id: str
     organization_id: str
@@ -55,7 +70,11 @@ class CallResponse(BaseSchema):
     duration: Optional[int]
     recording_url: Optional[str]
     transcript: Optional[str]
-    actions: Optional[dict]
+    actions: Optional[dict] = None
+
+
+class CallTranscriptResponse(BaseSchema):
+    transcript: Optional[str]
 
 
 class Synth(str, Enum):

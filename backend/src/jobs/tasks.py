@@ -6,7 +6,9 @@ from supabase._async.client import AsyncClient as SupabaseClient
 
 from auth import get_supabase
 from celeryworker import celery_app
-from config import SUPABASE_CUSTOMER_SET_BUCKET_NAME
+from config import (
+    SUPABASE_CUSTOMER_SET_BUCKET_NAME,
+)
 from constants import CustomerSetStatus
 from log import log
 from models import get_db
@@ -70,10 +72,3 @@ async def process_csv_file(customer_set_id: str):
 
     customer_set.status = CustomerSetStatus.PROCESSED
     await CustomerSetRepository(db).update(customer_set, id=customer_set.id)
-
-
-@celery_app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):
-    log.info(f"Registering periodic tasks on {sender}")
-    # Periodic tasks
-    log.info(f"Registered periodic tasks on {sender}")

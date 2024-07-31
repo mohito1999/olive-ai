@@ -22,7 +22,7 @@ class Campaign(Base, AuditMixin, metaclass=BaseMeta):
     name = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     type = Column(Text, nullable=False, default=CampaignType.OUTBOUND)
-    status = Column(Text, nullable=False, server_default=CampaignStatus.DRAFT.value)
+    status = Column(Text, nullable=False, server_default=CampaignStatus.IDLE.value)
     prompt = Column(Text, nullable=False)
     initial_message = Column(Text, nullable=False)
     max_duration = Column(Integer, nullable=False, default=0)
