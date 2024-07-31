@@ -4,6 +4,7 @@ import { CustomerSetUpdationForm } from "@/components/forms/customer-set-updatio
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CustomerTable } from "@/components/tables/customer-table/customer-table";
 import { useCustomerSetQuery } from "@/store/customer_set";
 import { useCustomersQuery } from "@/store/customer";
 import { useParams } from "next/navigation";
@@ -21,7 +22,7 @@ export default function Page() {
             <div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
                 <BreadCrumb
                     items={[
-                        { title: "Customer Sets", link: "/customer-sets" },
+                        { title: "Customer sets", link: "/customer-sets" },
                         { title: customerSet?.name || "", link: `/customer-sets/${customerSetId}` }
                     ]}
                 />
@@ -36,9 +37,7 @@ export default function Page() {
                 </div>
                 <Separator />
                 {customerSet && <CustomerSetUpdationForm customerSet={customerSet} />}
-                {customers && customers.length > 0 && (
-                    <pre>{JSON.stringify(customers, null, 2)}</pre>
-                )}
+                {customers && customers.length > 0 && <CustomerTable data={customers} pageCount={1} />}
             </div>
         </ScrollArea>
     );

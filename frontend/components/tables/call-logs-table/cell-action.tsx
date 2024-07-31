@@ -8,13 +8,13 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { User } from '@/constants/data';
-import { Edit, MoreHorizontal, Trash } from 'lucide-react';
+import { ListCall } from '@/types/call';
+import { Edit, MoreHorizontal, Trash, File } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 interface CellActionProps {
-    data: User;
+    data: ListCall;
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
@@ -42,15 +42,8 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-                    <DropdownMenuItem
-                        onClick={() =>
-                            router.push(`/user/${data.id}`)
-                        }
-                    >
-                        <Edit className="mr-2 h-4 w-4" /> Update
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setOpen(true)}>
-                        <Trash className="mr-2 h-4 w-4" /> Delete
+                    <DropdownMenuItem>
+                        <File className="mr-2 h-4 w-4" /> Transcript
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

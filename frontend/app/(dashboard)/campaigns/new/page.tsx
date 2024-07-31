@@ -69,7 +69,7 @@ export default function Page() {
                 <BreadCrumb
                     items={[
                         { title: "Campaigns", link: "/campaigns" },
-                        { title: "New campaign", link: "/campaigns/new" }
+                        { title: "New", link: "/campaigns/new" }
                     ]}
                 />
 

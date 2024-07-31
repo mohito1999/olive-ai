@@ -238,14 +238,9 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit, buttonText }: prop
             )}
           />
 
-          <Accordion
-            type="single"
-            collapsible
-            className="w-full"
-            defaultValue="advanced-options"
-          >
+          <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="advanced-options">
-              <AccordionTrigger data-state="open">Advanced</AccordionTrigger>
+              <AccordionTrigger>Advanced</AccordionTrigger>
               <AccordionContent>
                 <div className="gap-6 md:grid md:grid-cols-2">
                   <div className="rounded border p-4">

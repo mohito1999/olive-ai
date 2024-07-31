@@ -106,21 +106,21 @@ export const navItems: NavItem[] = [
         label: "Campaigns"
     },
     {
-        title: "Customer Sets",
+        title: "Customer sets",
         href: "/customer-sets",
         icon: "user",
-        label: "Customer Sets"
+        label: "Customer sets"
     },
-    // {
-    //     title: "Call logs",
-    //     href: "/call-logs",
-    //     icon: "user",
-    //     label: "Call logs"
-    // },
+    {
+        title: "Call logs",
+        href: "/call-logs",
+        icon: "phone",
+        label: "Call logs"
+    },
     {
         title: "Test call",
         href: "/test-call",
         icon: "page",
         label: "Test call"
-    },
+    }
 ];

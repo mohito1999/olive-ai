@@ -15,10 +15,10 @@ export default function Page() {
 
     return (
         <div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
-            <BreadCrumb items={[{ title: "Customer Sets", link: "/customer_sets" }]} />
+            <BreadCrumb items={[{ title: "Customer sets", link: "/customer_sets" }]} />
 
             <div className="flex items-start justify-between">
-                <Heading title="Customer Sets" description="Manage customer sets" />
+                <Heading title="Customer sets" description="Manage customer sets" />
 
                 <Link
                     href={"/customer-sets/new"}

@@ -4,7 +4,6 @@ import {
     Check,
     ChevronLeft,
     ChevronRight,
-    CircuitBoardIcon,
     Command,
     CreditCard,
     File,
@@ -28,7 +27,8 @@ import {
     User,
     User2Icon,
     UserX2Icon,
-    X
+    X,
+    Phone
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -38,9 +38,9 @@ export const Icons = {
     logo: Command,
     login: LogIn,
     close: X,
+    phone: Phone,
     profile: User2Icon,
     spinner: Loader2,
-    kanban: CircuitBoardIcon,
     chevronLeft: ChevronLeft,
     chevronRight: ChevronRight,
     trash: Trash,

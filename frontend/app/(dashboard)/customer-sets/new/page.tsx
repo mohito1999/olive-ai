@@ -11,8 +11,8 @@ export default function Page() {
             <div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
                 <BreadCrumb
                     items={[
-                        { title: "Customer Sets", link: "/customer-sets" },
-                        { title: "New customer set", link: "/customer-sets/new" }
+                        { title: "Customer sets", link: "/customer-sets" },
+                        { title: "New", link: "/customer-sets/new" }
                     ]}
                 />
 
