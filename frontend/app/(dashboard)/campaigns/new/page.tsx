@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createCampaignMutation } from "@/store/campaign";
 import { useToast } from "@/components/ui/use-toast";
-import { CreateCampaign, CampaignFormValues } from "@/types/campaign";
+import { CreateCampaign, CampaignFormValues, campaignStatus } from "@/types/campaign";
 import { SubmitHandler } from "react-hook-form";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -38,7 +38,7 @@ export default function Page() {
             customer_sets: [],
             max_retries: 0,
             max_duration: 0,
-            status: "DRAFT",
+            status: campaignStatus.IDLE,
             end_date: null
         };
         createCampaign.mutate(creationPayload, {
