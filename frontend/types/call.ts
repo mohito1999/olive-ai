@@ -19,3 +19,10 @@ export type Call = ListCall & {
     actions: object | null;
 };
 
+export type CallAction = {
+    type: string;
+    data: {
+        message?: string;
+        timestamp: string;
+    };
+};
