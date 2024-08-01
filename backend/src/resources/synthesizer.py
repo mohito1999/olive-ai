@@ -112,9 +112,12 @@ async def delete_synthesizer(
     current_user: dict = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     try:
         log.info(f"Deleting synthesizer for synthesizer_id: '{synthesizer_id}'")
-        await SynthesizerRepository(db).delete(id=synthesizer_id, unique_fields=["name"])
+        await SynthesizerRepository(db).delete(
+            _user_id=current_user_id, id=synthesizer_id, unique_fields=["name"]
+        )
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

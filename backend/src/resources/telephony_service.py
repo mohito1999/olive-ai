@@ -112,9 +112,12 @@ async def delete_telephony_service(
     current_user: dict = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     try:
         log.info(f"Deleting telephony_service for telephony_service_id: '{telephony_service_id}'")
-        await TelephonyServiceRepository(db).delete(id=telephony_service_id, unique_fields=["name"])
+        await TelephonyServiceRepository(db).delete(
+            _user_id=current_user_id, id=telephony_service_id, unique_fields=["name"]
+        )
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

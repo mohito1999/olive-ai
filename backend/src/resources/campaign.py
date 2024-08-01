@@ -256,11 +256,19 @@ async def delete_campaign(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
+        log.info(f"Deleting campaign-customer-set mapping for campaign_id: '{campaign_id}'")
+        try:
+            await CampaignCustomerSetRepository(db).delete(
+                campaign_id=campaign_id, permanent_operation=True
+            )
+        except RecordNotFoundException:
+            pass
         log.info(f"Deleting campaign_id: '{campaign_id}'")
         await CampaignRepository(db).delete(
-            id=campaign_id, organization_id=current_user_organization_id
+            _user_id=current_user_id, id=campaign_id, organization_id=current_user_organization_id
         )
     except RecordNotFoundException as e:
         raise NotFoundException(e)

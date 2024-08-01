@@ -107,9 +107,12 @@ async def delete_agent(
     current_user: dict = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     try:
         log.info(f"Deleting agent for agent_id: '{agent_id}'")
-        await AgentRepository(db).delete(id=agent_id, unique_fields=["name"])
+        await AgentRepository(db).delete(
+            _user_id=current_user_id, id=agent_id, unique_fields=["name"]
+        )
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

@@ -91,7 +91,9 @@ async def get_customer(
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Getting customer for customer_id: '{customer_id}'")
-        item = await CustomerRepository(db).get(id=customer_id, organization_id=current_user_organization_id)
+        item = await CustomerRepository(db).get(
+            id=customer_id, organization_id=current_user_organization_id
+        )
         return CustomerResponse(**item.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)
@@ -135,10 +137,16 @@ async def delete_customer(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Deleting customer for customer_id: '{customer_id}'")
-        await CustomerRepository(db).delete(id=customer_id, organization_id=current_user_organization_id, unique_fields=["name"])
+        await CustomerRepository(db).delete(
+            _user_id=current_user_id,
+            id=customer_id,
+            organization_id=current_user_organization_id,
+            unique_fields=["name"],
+        )
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

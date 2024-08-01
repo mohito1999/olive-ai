@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
@@ -17,7 +18,12 @@ from exceptions import (
 from jobs import process_csv_file_task
 from log import log
 from models import get_db
-from repositories import CustomerSetRepository, OrganizationRepository
+from repositories import (
+    CampaignCustomerSetRepository,
+    CustomerRepository,
+    CustomerSetRepository,
+    OrganizationRepository,
+)
 from schemas import (
     CustomerSetDBInputSchema,
     CustomerSetResponse,
@@ -119,7 +125,9 @@ async def get_customer_set(
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Getting customer_set for customer_set_id: '{customer_set_id}'")
-        item = await CustomerSetRepository(db).get(id=customer_set_id, organization_id=current_user_organization_id)
+        item = await CustomerSetRepository(db).get(
+            id=customer_set_id, organization_id=current_user_organization_id
+        )
         return CustomerSetResponse(**item.dict())
     except RecordNotFoundException as e:
         raise NotFoundException(e)
@@ -138,7 +146,9 @@ async def process_customer_set(
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
         log.info(f"Queuing processing for customer_set for customer_set_id: '{customer_set_id}'")
-        item = await CustomerSetRepository(db).get(id=customer_set_id, organization_id=current_user_organization_id)
+        item = await CustomerSetRepository(db).get(
+            id=customer_set_id, organization_id=current_user_organization_id
+        )
         if item.status == CustomerSetStatus.PROCESSED.value:
             raise BadRequestException(detail="Customer set has already been processed")
 
@@ -185,16 +195,38 @@ async def delete_customer_set(
     db: AsyncSession = Depends(get_db),
     supabase: SupabaseClient = Depends(get_supabase),
 ):
+    current_user_id = current_user.get("sub")
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
-        customer_set = await CustomerSetRepository(db).get(id=customer_set_id, organization_id=current_user_organization_id)
+        customer_set = await CustomerSetRepository(db).get(
+            id=customer_set_id, organization_id=current_user_organization_id
+        )
         log.info(f"Deleting files for customer_set_id: '{customer_set_id}'")
         response = await supabase.storage.from_(SUPABASE_CUSTOMER_SET_BUCKET_NAME).remove(
             customer_set.url
         )
         log.debug(response)
-        log.info(f"Deleting customer_set for customer_set_id: '{customer_set_id}'")
-        await CustomerSetRepository(db).delete(id=customer_set_id, organization_id=current_user_organization_id)
+        log.info(
+            f"Deleting campaign-customer-set mapping for customer_set_id: '{customer_set_id}'"
+        )
+        try:
+            await CampaignCustomerSetRepository(db).delete(
+                customer_set_id=customer_set_id, permanent_operation=True
+            )
+            log.info(f"Deleting customers for customer_set_id: '{customer_set_id}'")
+            await CustomerRepository(db).delete(
+                _user_id=current_user_id,
+                customer_set_id=customer_set_id,
+                organization_id=current_user_organization_id,
+            )
+        except RecordNotFoundException:
+            pass
+        log.info(f"Deleting customer_set_id: '{customer_set_id}'")
+        await CustomerSetRepository(db).delete(
+            _user_id=current_user_id,
+            id=customer_set_id,
+            organization_id=current_user_organization_id,
+        )
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

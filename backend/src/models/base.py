@@ -64,10 +64,11 @@ class Base:
         await db.refresh(self)
         return self
 
-    async def delete(self, db: AsyncSession, unique_fields: list[str] = []):
+    async def delete(self, db: AsyncSession, user_id: str, unique_fields: list[str] = []):
         now = datetime.utcnow()
         now_str = now.strftime("%Y%m%d%H%M%S")
         self.deleted_at = now
+        self.updated_by = user_id
         for key in unique_fields:
             val = getattr(self, key)
             log.info(val)

@@ -112,9 +112,10 @@ async def delete_organization(
     current_user: dict = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     try:
         log.info(f"Deleting organization for organization_id: '{organization_id}'")
-        await OrganizationRepository(db).delete(id=organization_id)
+        await OrganizationRepository(db).delete(_user_id=current_user_id, id=organization_id)
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

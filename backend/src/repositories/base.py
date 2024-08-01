@@ -240,6 +240,7 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
 
     async def delete(
         self,
+        _user_id: str = "system",
         where: Optional[List] = None,
         permanent_operation: bool = False,
         unique_fields: List = [],
@@ -266,7 +267,7 @@ class BaseRepository(Generic[IN_SCHEMA, SCHEMA, TABLE], metaclass=ABCMeta):
                 if len(entries) == 0:
                     raise NoResultFound(f"{self._table.__name__}<{filter_query}> not found")
                 for entry in entries:
-                    await entry.delete(self._db_session, unique_fields=unique_fields)
+                    await entry.delete(self._db_session, user_id=_user_id, unique_fields=unique_fields)
             return None
         except NoResultFound as e:
             raise RecordNotFoundException(e)

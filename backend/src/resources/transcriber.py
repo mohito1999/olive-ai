@@ -112,9 +112,12 @@ async def delete_transcriber(
     current_user: dict = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
+    current_user_id = current_user.get("sub")
     try:
         log.info(f"Deleting transcriber for transcriber_id: '{transcriber_id}'")
-        await TranscriberRepository(db).delete(id=transcriber_id, unique_fields=["name"])
+        await TranscriberRepository(db).delete(
+            _user_id=current_user_id, id=transcriber_id, unique_fields=["name"]
+        )
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:
