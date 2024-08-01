@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCampaignQuery } from "@/store/campaign";
-import { useParams } from "next/navigation";
-import { updateCampaignMutation, executeCampaignMutation } from "@/store/campaign";
+import { useParams, useRouter } from "next/navigation";
+import { updateCampaignMutation, executeCampaignMutation, deleteCampaignMutation } from "@/store/campaign";
 import { useToast } from "@/components/ui/use-toast";
 import {
     CampaignFormValues,
@@ -22,12 +22,14 @@ import { SubmitHandler } from "react-hook-form";
 
 export default function Page() {
     const params = useParams();
+    const router = useRouter();
     const campaignId = Array.isArray(params.campaignId) ? params.campaignId[0] : params.campaignId;
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const { data: campaign } = useCampaignQuery(campaignId);
     const updateCampaign = updateCampaignMutation(campaignId);
     const executeCampaign = executeCampaignMutation(campaignId);
+    const deleteCampaign = deleteCampaignMutation(campaignId);
 
     const [currentAction, setCurrentAction] = useState<CampaignAction | null>(null);
     const [confirmationOpen, setConfirmationOpen] = useState(false);
@@ -64,7 +66,31 @@ export default function Page() {
         );
     };
 
-    const handleFormSubmit: SubmitHandler<CampaignFormValues> = async (values) => {
+    const handleDeleteSubmit = async () => {
+        setIsLoading(true);
+        deleteCampaign.mutate(undefined, {
+            onSuccess: () => {
+                toast({
+                    title: "Campaign deleted",
+                    description: "Campaign has been deleted successfully",
+                    variant: "default"
+                });
+                router.push("/campaigns");
+            },
+            onError: (error) => {
+                toast({
+                    title: "Failed to delete campaign",
+                    description: error.message,
+                    variant: "destructive"
+                });
+            },
+            onSettled: () => {
+                setIsLoading(false);
+            }
+        });
+    };
+
+    const handleUpdateSubmit: SubmitHandler<CampaignFormValues> = async (values) => {
         setIsLoading(true);
         updateCampaign.mutate(values, {
             onSuccess: () => {
@@ -152,7 +178,8 @@ export default function Page() {
                         <CampaignForm
                             campaign={campaign}
                             isLoading={isLoading}
-                            onSubmit={handleFormSubmit}
+                            onSubmit={handleUpdateSubmit}
+                            onDeleteSubmit={handleDeleteSubmit}
                             buttonText="Update"
                         />
                     )}

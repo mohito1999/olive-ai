@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { requestOliveBackendWithAuth } from "@/lib/axios";
 import { queryClient } from "@/lib/query";
-import { CustomerSet, CreateCustomerSet } from "@/types/customer_set";
+import { CustomerSet } from "@/types/customer_set";
 
 export const CustomerSetService = {
     createCustomerSet: async (payload: FormData): Promise<CustomerSet> => {
@@ -14,7 +14,10 @@ export const CustomerSetService = {
         return response.data;
     },
     listCustomerSets: async (): Promise<CustomerSet[]> => {
-        const response = await requestOliveBackendWithAuth({ url: `/customer-sets`, method: "GET" });
+        const response = await requestOliveBackendWithAuth({
+            url: `/customer-sets`,
+            method: "GET"
+        });
         return response.data;
     },
     getCustomerSet: async (id: string): Promise<CustomerSet> => {
@@ -31,12 +34,20 @@ export const CustomerSetService = {
             method: "PATCH"
         });
         return response.data;
+    },
+    deleteCustomerSet: async (id: string): Promise<null> => {
+        const response = await requestOliveBackendWithAuth({
+            url: `/customer-sets/${id}`,
+            method: "DELETE"
+        });
+        return response.data;
     }
 };
 
 export const createCustomerSetMutation = () => {
     return useMutation({
-        mutationFn: (newCustomerSet: FormData) => CustomerSetService.createCustomerSet(newCustomerSet),
+        mutationFn: (newCustomerSet: FormData) =>
+            CustomerSetService.createCustomerSet(newCustomerSet),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["customer_sets"] })
     });
 };
@@ -63,5 +74,19 @@ export const updateCustomerSetMutation = (id: string) => {
         mutationFn: (updatedCustomerSet: Partial<CustomerSet>) =>
             CustomerSetService.updateCustomerSet(id, updatedCustomerSet),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["customer_set", id] })
+    });
+};
+
+export const deleteCustomerSetMutation = (id: string) => {
+    return useMutation({
+        mutationFn: () => CustomerSetService.deleteCustomerSet(id),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === "campaign" ||
+                    query.queryKey[0] === "campaings" ||
+                    query.queryKey[0] === "customer_sets"
+            });
+        }
     });
 };

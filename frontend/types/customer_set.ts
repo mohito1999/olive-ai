@@ -6,15 +6,12 @@ export const customerSetType = {
 
 export type CustomerSetType = (typeof customerSetType)[keyof typeof customerSetType];
 
-export type CreateCustomerSet = {
+export type CustomerSet = {
+    id: string;
     organization_id: string;
     name: string;
     description?: string | null;
     type: CustomerSetType;
-};
-
-export type CustomerSet = CreateCustomerSet & {
-    id: string;
 };
 
 const MAX_FILE_SIZE = 5242880;
@@ -30,9 +27,9 @@ export const customerSetCreationFormSchema = customerSetUpdationFormSchema.exten
     // typeof check is required to make it work in both client and server side
     file: (typeof window === "undefined" ? z.any() : z.instanceof(FileList))
         .refine((files) => files.length == 1, `Only one file is allowed.`)
-        .refine((files) => files[0].size <= MAX_FILE_SIZE, `File size should be less than 5MB.`)
+        .refine((files) => files.length === 1 && files[0].size <= MAX_FILE_SIZE, `File size should be less than 5MB.`)
         .refine(
-            (files) => ACCEPTED_FILE_TYPES.includes(files[0].type),
+            (files) => files.length === 1 && ACCEPTED_FILE_TYPES.includes(files[0].type),
             "Only .csv files are allowed."
         )
 });

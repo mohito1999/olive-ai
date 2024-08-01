@@ -37,6 +37,13 @@ export const CampaignService = {
         });
         return response.data;
     },
+    deleteCampaign: async (id: string): Promise<null> => {
+        const response = await requestOliveBackendWithAuth({
+            url: `/campaigns/${id}`,
+            method: "DELETE"
+        });
+        return response.data;
+    },
     executeCampaign: async (
         id: string,
         payload: ExecuteCampaignRequest
@@ -79,6 +86,13 @@ export const updateCampaignMutation = (id: string) => {
         mutationFn: (updatedCampaign: Partial<Campaign>) =>
             CampaignService.updateCampaign(id, updatedCampaign),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaign", id] })
+    });
+};
+
+export const deleteCampaignMutation = (id: string) => {
+    return useMutation({
+        mutationFn: () => CampaignService.deleteCampaign(id),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
     });
 };
 

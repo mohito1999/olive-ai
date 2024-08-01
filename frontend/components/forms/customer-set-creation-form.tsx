@@ -72,8 +72,8 @@ export const CustomerSetCreationForm = () => {
     createCustomerSet.mutate(formData, {
       onSuccess: () => {
         toast({
-          title: "Customer Set created",
-          description: `Customer Set '${values.name}' created successfully`,
+          title: "Customer set created",
+          description: `Customer set '${values.name}' created successfully`,
           variant: "default"
         });
         router.push("/customer-sets");

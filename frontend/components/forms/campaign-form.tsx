@@ -37,21 +37,31 @@ import { useTranscribersQuery } from "@/store/transcriber";
 import { useTelephonyServicesQuery } from "@/store/telephony_service";
 import { useCustomerSetsQuery } from "@/store/customer_set";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertModal } from "../modal/alert-modal";
 
 type props = {
   campaign?: Campaign;
   isLoading: boolean;
   onSubmit: (values: CampaignFormValues) => void;
+  onDeleteSubmit?: () => void;
   buttonText?: string;
 };
 
-export const CampaignForm = ({ campaign, isLoading, onSubmit, buttonText }: props) => {
+export const CampaignForm = ({
+  campaign,
+  isLoading,
+  onSubmit,
+  onDeleteSubmit,
+  buttonText
+}: props) => {
   const { data: agents } = useAgentsQuery();
   const { data: synthesizers } = useSynthesizersQuery();
   const { data: transcribers } = useTranscribersQuery();
   const { data: telephonyServices } = useTelephonyServicesQuery();
   const { data: customerSets } = useCustomerSetsQuery();
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
 
   const defaultValues = campaign
     ? Object.fromEntries(
@@ -89,7 +99,8 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit, buttonText }: prop
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignFormSchema),
-    defaultValues: defaultValues,
+    // @ts-ignore
+    values: defaultValues,
     mode: "onChange"
   });
 
@@ -108,20 +119,111 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit, buttonText }: prop
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
-        <div className="grid gap-6">
-          <div className="gap-6 md:grid md:grid-cols-2">
+    <>
+      {onDeleteSubmit && (
+        <AlertModal
+          isOpen={confirmationOpen}
+          onClose={() => setConfirmationOpen(false)}
+          onConfirm={onDeleteSubmit}
+          loading={isLoading}
+        />
+      )}
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
+          <div className="grid gap-6">
+            <div className="gap-6 md:grid md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isLoading}
+                        placeholder="Name of the campaign"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isLoading}
+                        placeholder="What is this campaign about?"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type of campaign" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="OUTBOUND">OUTBOUND</SelectItem>
+                        <SelectItem value="INBOUND">INBOUND</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
-              name="name"
+              name="initial_message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Initial message</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="Name of the campaign"
+                      placeholder="Hello, how are you?"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="prompt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prompt</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      disabled={isLoading}
+                      placeholder="..."
+                      rows={5}
                       {...field}
                     />
                   </FormControl>
@@ -132,360 +234,310 @@ export const CampaignForm = ({ campaign, isLoading, onSubmit, buttonText }: prop
 
             <FormField
               control={form.control}
-              name="description"
+              name="customer_sets"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={isLoading}
-                      placeholder="What is this campaign about?"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isLoading}
+                  <FormLabel>Customer sets</FormLabel>
+                  <MultiSelector
+                    onValuesChange={field.onChange}
+                    values={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type of campaign" />
-                      </SelectTrigger>
+                      <MultiSelectorTrigger>
+                        <MultiSelectorInput placeholder="Select customer sets for this campaign" />
+                      </MultiSelectorTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="OUTBOUND">OUTBOUND</SelectItem>
-                      <SelectItem value="INBOUND">INBOUND</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <MultiSelectorContent>
+                      <MultiSelectorList>
+                        {customerSets?.map((item) => (
+                          <MultiSelectorItem
+                            key={item.id}
+                            value={item.id}
+                          >
+                            {item.name} ({item.id})
+                          </MultiSelectorItem>
+                        ))}
+                      </MultiSelectorList>
+                    </MultiSelectorContent>
+                  </MultiSelector>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="advanced-options">
+                <AccordionTrigger>Advanced</AccordionTrigger>
+                <AccordionContent>
+                  <div className="gap-6 md:grid md:grid-cols-2">
+                    <div className="rounded border p-4">
+                      <FormField
+                        control={form.control}
+                        name="telephony_service_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telephony service ID</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value ?? ""}
+                              disabled={isLoading}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="(Optional) Select Telephony Service" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {telephonyServices?.map((item) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.id}
+                                  >
+                                    {item.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="telephony_service_config"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Telephony service config
+                            </FormLabel>
+                            <FormControl>
+                              <pre
+                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
+                                contentEditable={!isLoading}
+                                suppressContentEditableWarning={
+                                  true
+                                }
+                                onBlur={(e) =>
+                                  field.onChange(
+                                    e.currentTarget.textContent
+                                  )
+                                }
+                              >
+                                {getFormattedJsonValue(field.value)}
+                              </pre>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="rounded border p-4">
+                      <FormField
+                        control={form.control}
+                        name="transcriber_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Transcriber ID</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value ?? ""}
+                              disabled={isLoading}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="(Optional) Select Transcriber" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {transcribers?.map((item) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.id}
+                                  >
+                                    {item.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="transcriber_config"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Transcriber config</FormLabel>
+                            <FormControl>
+                              <pre
+                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
+                                contentEditable={!isLoading}
+                                suppressContentEditableWarning={
+                                  true
+                                }
+                                onBlur={(e) =>
+                                  field.onChange(
+                                    e.currentTarget.textContent
+                                  )
+                                }
+                              >
+                                {getFormattedJsonValue(field.value)}
+                              </pre>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="rounded border p-4">
+                      <FormField
+                        control={form.control}
+                        name="agent_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Agent ID</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value ?? ""}
+                              disabled={isLoading}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="(Optional) Select Agent" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {agents?.map((item) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.id}
+                                  >
+                                    {item.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="agent_config"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Agent config</FormLabel>
+                            <FormControl>
+                              <pre
+                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
+                                contentEditable={!isLoading}
+                                suppressContentEditableWarning={
+                                  true
+                                }
+                                onBlur={(e) =>
+                                  field.onChange(
+                                    e.currentTarget.textContent
+                                  )
+                                }
+                              >
+                                {getFormattedJsonValue(field.value)}
+                              </pre>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="rounded border p-4">
+                      <FormField
+                        control={form.control}
+                        name="synthesizer_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Synthesizer ID</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value ?? ""}
+                              disabled={isLoading}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="(Optional) Select Synthesizer" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {synthesizers?.map((item) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.id}
+                                  >
+                                    {item.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="synthesizer_config"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Synthesizer config</FormLabel>
+                            <FormControl>
+                              <pre
+                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
+                                contentEditable={!isLoading}
+                                suppressContentEditableWarning={
+                                  true
+                                }
+                                onBlur={(e) =>
+                                  field.onChange(
+                                    e.currentTarget.textContent
+                                  )
+                                }
+                              >
+                                {getFormattedJsonValue(field.value)}
+                              </pre>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
-          <FormField
-            control={form.control}
-            name="initial_message"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Initial message</FormLabel>
-                <FormControl>
-                  <Input
-                    disabled={isLoading}
-                    placeholder="Hello, how are you?"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="prompt"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prompt</FormLabel>
-                <FormControl>
-                  <Textarea
-                    disabled={isLoading}
-                    placeholder="..."
-                    rows={5}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <FormField
-            control={form.control}
-            name="customer_sets"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Customer sets</FormLabel>
-                <MultiSelector onValuesChange={field.onChange} values={field.value}>
-                  <FormControl>
-                    <MultiSelectorTrigger>
-                      <MultiSelectorInput placeholder="Select customer sets for this campaign" />
-                    </MultiSelectorTrigger>
-                  </FormControl>
-                  <MultiSelectorContent>
-                    <MultiSelectorList>
-                      {customerSets?.map((item) => (
-                        <MultiSelectorItem key={item.id} value={item.id}>
-                          {item.name} ({item.id})
-                        </MultiSelectorItem>
-                      ))}
-                    </MultiSelectorList>
-                  </MultiSelectorContent>
-                </MultiSelector>
-                <FormMessage />
-              </FormItem>
+          <div className="flex justify-between">
+            <Button
+              type="submit"
+              className="flex justify-center"
+              size="default"
+              disabled={isLoading}
+            >
+              {buttonText ?? "Submit"}
+            </Button>
+            {onDeleteSubmit && (
+              <Button
+                type="button"
+                className="flex justify-center"
+                variant="destructive"
+                size="default"
+                disabled={isLoading}
+                onClick={() => setConfirmationOpen(true)}
+              >
+                Delete
+              </Button>
             )}
-          />
-
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="advanced-options">
-              <AccordionTrigger>Advanced</AccordionTrigger>
-              <AccordionContent>
-                <div className="gap-6 md:grid md:grid-cols-2">
-                  <div className="rounded border p-4">
-                    <FormField
-                      control={form.control}
-                      name="telephony_service_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telephony service ID</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value ?? ""}
-                            disabled={isLoading}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="(Optional) Select Telephony Service" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {telephonyServices?.map((item) => (
-                                <SelectItem
-                                  key={item.id}
-                                  value={item.id}
-                                >
-                                  {item.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="telephony_service_config"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telephony service config</FormLabel>
-                          <FormControl>
-                            <pre
-                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                              contentEditable={!isLoading}
-                              suppressContentEditableWarning={true}
-                              onBlur={(e) =>
-                                field.onChange(
-                                  e.currentTarget.textContent
-                                )
-                              }
-                            >
-                              {getFormattedJsonValue(field.value)}
-                            </pre>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="rounded border p-4">
-                    <FormField
-                      control={form.control}
-                      name="transcriber_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Transcriber ID</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value ?? ""}
-                            disabled={isLoading}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="(Optional) Select Transcriber" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {transcribers?.map((item) => (
-                                <SelectItem
-                                  key={item.id}
-                                  value={item.id}
-                                >
-                                  {item.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="transcriber_config"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Transcriber config</FormLabel>
-                          <FormControl>
-                            <pre
-                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                              contentEditable={!isLoading}
-                              suppressContentEditableWarning={true}
-                              onBlur={(e) =>
-                                field.onChange(
-                                  e.currentTarget.textContent
-                                )
-                              }
-                            >
-                              {getFormattedJsonValue(field.value)}
-                            </pre>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="rounded border p-4">
-                    <FormField
-                      control={form.control}
-                      name="agent_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Agent ID</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value ?? ""}
-                            disabled={isLoading}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="(Optional) Select Agent" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {agents?.map((item) => (
-                                <SelectItem
-                                  key={item.id}
-                                  value={item.id}
-                                >
-                                  {item.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="agent_config"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Agent config</FormLabel>
-                          <FormControl>
-                            <pre
-                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                              contentEditable={!isLoading}
-                              suppressContentEditableWarning={true}
-                              onBlur={(e) =>
-                                field.onChange(
-                                  e.currentTarget.textContent
-                                )
-                              }
-                            >
-                              {getFormattedJsonValue(field.value)}
-                            </pre>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="rounded border p-4">
-                    <FormField
-                      control={form.control}
-                      name="synthesizer_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Synthesizer ID</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value ?? ""}
-                            disabled={isLoading}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="(Optional) Select Synthesizer" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {synthesizers?.map((item) => (
-                                <SelectItem
-                                  key={item.id}
-                                  value={item.id}
-                                >
-                                  {item.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="synthesizer_config"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Synthesizer config</FormLabel>
-                          <FormControl>
-                            <pre
-                              className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                              contentEditable={!isLoading}
-                              suppressContentEditableWarning={true}
-                              onBlur={(e) =>
-                                field.onChange(
-                                  e.currentTarget.textContent
-                                )
-                              }
-                            >
-                              {getFormattedJsonValue(field.value)}
-                            </pre>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-
-        <Button
-          type="submit"
-          className="flex justify-center"
-          size="default"
-          disabled={isLoading}
-        >
-          {buttonText ?? "Submit"}
-        </Button>
-      </form>
-    </Form>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 };
