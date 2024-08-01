@@ -23,7 +23,7 @@ class CallDBInputSchema(BaseSchema):
     duration: Optional[int] = None
     recording_url: Optional[str] = None
     transcript: Optional[str] = None
-    actions: Optional[dict] = None
+    actions: Optional[dict | list] = None
     telephony_service_id: str
     telephony_service_config: dict
     transcriber_id: str
@@ -38,6 +38,11 @@ class CallDBInputSchema(BaseSchema):
 
 class CallDBSchema(CallDBInputSchema):
     id: str
+
+
+class CallActionSchema(BaseSchema):
+    type: str
+    data: dict
 
 
 class ListCallsResponse(BaseSchema):
@@ -70,7 +75,7 @@ class CallResponse(BaseSchema):
     duration: Optional[int]
     recording_url: Optional[str]
     transcript: Optional[str]
-    actions: Optional[dict] = None
+    actions: Optional[dict | list] = None
 
 
 class CallTranscriptResponse(BaseSchema):

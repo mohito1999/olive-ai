@@ -14,6 +14,7 @@ from log import log
 from models import Call, get_db
 from repositories import CallRepository
 from schemas import (
+    CallActionSchema,
     CallResponse,
     CallTranscriptResponse,
     ListCallsResponse,
@@ -72,11 +73,37 @@ async def get_call_transcript(
 ):
     current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
     try:
-        log.info(f"Getting call_id: '{call_id}'")
+        log.info(f"Getting transcript for call_id: '{call_id}'")
         item = await CallRepository(db).get(
             id=call_id, organization_id=current_user_organization_id
         )
         return CallTranscriptResponse(transcript=item.transcript)
+    except RecordNotFoundException as e:
+        raise NotFoundException(e)
+    except ApplicationException as e:
+        raise e
+    except Exception as e:
+        raise InternalServerException(e)
+
+@router.get("/{call_id}/actions", response_model=List[CallActionSchema])
+async def get_call_actions(
+    call_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    current_user_organization_id = current_user.get("user_metadata", {}).get("organization_id")
+    try:
+        log.info(f"Getting actions for call_id: '{call_id}'")
+        item = await CallRepository(db).get(
+            id=call_id, organization_id=current_user_organization_id
+        )
+        actions = []
+        if item.actions:
+            # Remove first null entry
+            item.actions.pop(0)
+            actions = [CallActionSchema(**action) for action in item.actions]
+
+        return actions
     except RecordNotFoundException as e:
         raise NotFoundException(e)
     except ApplicationException as e:

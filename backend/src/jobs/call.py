@@ -22,6 +22,7 @@ from vocode.streaming.models.transcriber import (
 )
 from vocode.streaming.transcriber.deepgram_transcriber import DeepgramEndpointingConfig
 
+from actions import StoreRemarkActionConfig
 from celeryworker import celery_app
 from config import (
     BASE_URL,
@@ -36,6 +37,7 @@ from config import (
     TWILIO_AUTH_TOKEN,
 )
 from constants import (
+    AgentActionConfigClass,
     AgentConfigClass,
     CallStatus,
     CallType,
@@ -57,11 +59,15 @@ from repositories import (
     TelephonyServiceRepository,
     TranscriberRepository,
 )
-from schemas import CallDBInputSchema
+from schemas import CallDBInputSchema, CallDBSchema
 from streaming.models.telephony import ExotelConfig
 from streaming.telephony.conversation.outbound_call import CustomOutboundCall
 from util.asyncio import async_to_sync
 from util.config_manager import CONFIG_MANAGER
+
+
+class CeleryTaskWithInfiniteRetries(Task):
+    max_retries = None
 
 
 @celery_app.task(name="execute_campaign_task", bind=True)
@@ -165,13 +171,112 @@ async def execute_campaign(campaign_id: str, customer_id: Optional[str] = None):
         make_outbound_call_task.apply_async((call.id,))
 
 
-class BaseTaskWithRetry(Task):
-    max_retries = None
-
-
-@celery_app.task(name="make_outbound_call_task", bind=True, base=BaseTaskWithRetry)
+@celery_app.task(name="make_outbound_call_task", bind=True, base=CeleryTaskWithInfiniteRetries)
 def make_outbound_call_task(self, call_id: str):
     async_to_sync(make_outbound_call, self, call_id)
+
+
+def get_telephony_service_config(call: CallDBSchema):
+    telephony_service_config_class = call.telephony_service_config.pop("config_class")
+    conversation_id = call.id
+    to_number = call.to_number
+
+    if telephony_service_config_class == TelephonyServiceConfigClass.TWILIO.value:
+        return (
+            TwilioConfig(
+                account_sid=TWILIO_ACCOUNT_SID,
+                auth_token=TWILIO_AUTH_TOKEN,
+                **call.telephony_service_config,
+            ),
+            f"+91{to_number}",
+            None,
+        )
+    elif telephony_service_config_class == TelephonyServiceConfigClass.EXOTEL.value:
+        return (
+            ExotelConfig(
+                account_sid=EXOTEL_ACCOUNT_SID,
+                api_key=EXOTEL_API_KEY,
+                api_token=EXOTEL_API_TOKEN,
+                **call.telephony_service_config,
+            ),
+            f"0{to_number}",
+            {
+                "CustomField": conversation_id,
+            },
+        )
+
+
+def get_agent_config(call: CallDBSchema, prompt: str, initial_message: str):
+    agent_config_class = call.agent_config.pop("config_class")
+
+    agent_action_configs = call.agent_config.pop("actions")
+    actions = []
+    for action_config in agent_action_configs:
+        action_config_class = action_config.pop("config_class")
+        if action_config_class == AgentActionConfigClass.STORE_REMARK.value:
+            actions.append(StoreRemarkActionConfig(**action_config))
+
+    agent_config = {
+        **call.agent_config,
+        "prompt_preamble": prompt,
+        "initial_message": BaseMessage(text=initial_message),
+        "actions": actions,
+    }
+
+    if agent_config_class == AgentConfigClass.CHATGPT.value:
+        azure_params = agent_config.pop("azure_params")
+        if azure_params:
+            return ChatGPTAgentConfig(
+                **agent_config,
+                azure_params=AzureOpenAIConfig(
+                    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+                    **azure_params,
+                ),
+            )
+        else:
+            return ChatGPTAgentConfig(**agent_config)
+    elif agent_config_class == AgentConfigClass.GROQ.value:
+        return GroqAgentConfig(**agent_config)
+    elif agent_config_class == AgentConfigClass.LANGCHAIN.value:
+        return LangchainAgentConfig(**agent_config)
+
+
+def get_transcriber_config(call: CallDBSchema):
+    transcriber_config_class = call.transcriber_config.pop("config_class")
+    if transcriber_config_class == TranscriberConfigClass.DEEPGRAM.value:
+        endpointing_config = call.transcriber_config.pop("endpointing_config")
+        if endpointing_config:
+            return DeepgramTranscriberConfig(
+                **call.transcriber_config,
+                endpointing_config=DeepgramEndpointingConfig(**endpointing_config),
+            )
+        else:
+            return DeepgramTranscriberConfig(**call.transcriber_config)
+
+
+def get_synthesizer_config(call: CallDBSchema):
+    synthesizer_config_class = call.synthesizer_config.pop("config_class")
+    if synthesizer_config_class == SynthesizerConfigClass.GOOGLE.value:
+        output_audio_config = call.synthesizer_config.pop("output_audio_config")
+        if output_audio_config:
+            return GoogleSynthesizerConfig.from_output_audio_config(
+                **call.synthesizer_config,
+                output_audio_config=OutputAudioConfig(**output_audio_config),
+            )
+        else:
+            return GoogleSynthesizerConfig.from_telephone_output_device(**call.synthesizer_config)
+    elif synthesizer_config_class == SynthesizerConfigClass.ELEVEN_LABS.value:
+        output_audio_config = call.synthesizer_config.pop("output_audio_config")
+        if output_audio_config:
+            return ElevenLabsSynthesizerConfig.from_output_audio_config(
+                api_key=os.getenv("ELEVEN_LABS_API_KEY"),
+                **call.synthesizer_config,
+                output_audio_config=OutputAudioConfig(**output_audio_config),
+            )
+        else:
+            return ElevenLabsSynthesizerConfig(
+                api_key=os.getenv("ELEVEN_LABS_API_KEY"), **call.synthesizer_config
+            )
 
 
 async def make_outbound_call(self, call_id: str):
@@ -197,18 +302,7 @@ async def make_outbound_call(self, call_id: str):
     campaign = await CampaignRepository(db).get(id=call.campaign_id)
     customer = await CustomerRepository(db).get(id=call.customer_id)
 
-    telephony_service_config_vocode = None
-    agent_config_vocode = None
-    transcriber_config_vocode = None
-    synthesizer_config_vocode = None
-
-    telephony_service_config_class = call.telephony_service_config.pop("config_class")
-    agent_config_class = call.agent_config.pop("config_class")
-    transcriber_config_class = call.transcriber_config.pop("config_class")
-    synthesizer_config_class = call.synthesizer_config.pop("config_class")
     conversation_id = call.id
-    telephony_params = None
-    to_number = call.to_number
     prompt_variables = {
         "name": customer.name,
         "mobile_number": customer.mobile_number,
@@ -217,77 +311,10 @@ async def make_outbound_call(self, call_id: str):
     prompt = campaign.prompt.format(**prompt_variables)
     initial_message = campaign.initial_message.format(**prompt_variables)
 
-    if telephony_service_config_class == TelephonyServiceConfigClass.TWILIO.value:
-        telephony_service_config_vocode = TwilioConfig(
-            account_sid=TWILIO_ACCOUNT_SID,
-            auth_token=TWILIO_AUTH_TOKEN,
-            **call.telephony_service_config,
-        )
-        to_number = f"+91{to_number}"
-    elif telephony_service_config_class == TelephonyServiceConfigClass.EXOTEL.value:
-        telephony_service_config_vocode = ExotelConfig(
-            account_sid=EXOTEL_ACCOUNT_SID,
-            api_key=EXOTEL_API_KEY,
-            api_token=EXOTEL_API_TOKEN,
-            **call.telephony_service_config,
-        )
-        telephony_params = {
-            "CustomField": conversation_id,
-        }
-        to_number = f"0{to_number}"
-
-    if agent_config_class == AgentConfigClass.CHATGPT.value:
-        azure_params = call.agent_config.pop("azure_params")
-        if azure_params:
-            agent_config_vocode = ChatGPTAgentConfig(
-                **call.agent_config,
-                prompt_preamble=prompt,
-                initial_message=BaseMessage(text=initial_message),
-                azure_params=AzureOpenAIConfig(
-                    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                    **azure_params,
-                ),
-            )
-        else:
-            agent_config_vocode = ChatGPTAgentConfig(**call.agent_config)
-    elif agent_config_class == AgentConfigClass.GROQ.value:
-        agent_config_vocode = GroqAgentConfig(**call.agent_config)
-    elif agent_config_class == AgentConfigClass.LANGCHAIN.value:
-        agent_config_vocode = LangchainAgentConfig(**call.agent_config)
-
-    if transcriber_config_class == TranscriberConfigClass.DEEPGRAM.value:
-        endpointing_config = call.transcriber_config.pop("endpointing_config")
-        if endpointing_config:
-            transcriber_config_vocode = DeepgramTranscriberConfig(
-                **call.transcriber_config,
-                endpointing_config=DeepgramEndpointingConfig(**endpointing_config),
-            )
-        else:
-            transcriber_config_vocode = DeepgramTranscriberConfig(**call.transcriber_config)
-
-    if synthesizer_config_class == SynthesizerConfigClass.GOOGLE.value:
-        output_audio_config = call.synthesizer_config.pop("output_audio_config")
-        if output_audio_config:
-            synthesizer_config_vocode = GoogleSynthesizerConfig.from_output_audio_config(
-                **call.synthesizer_config,
-                output_audio_config=OutputAudioConfig(**output_audio_config),
-            )
-        else:
-            synthesizer_config_vocode = GoogleSynthesizerConfig.from_telephone_output_device(
-                **call.synthesizer_config
-            )
-    elif synthesizer_config_class == SynthesizerConfigClass.ELEVEN_LABS.value:
-        output_audio_config = call.synthesizer_config.pop("output_audio_config")
-        if output_audio_config:
-            synthesizer_config_vocode = ElevenLabsSynthesizerConfig.from_output_audio_config(
-                api_key=os.getenv("ELEVEN_LABS_API_KEY"),
-                **call.synthesizer_config,
-                output_audio_config=OutputAudioConfig(**output_audio_config),
-            )
-        else:
-            synthesizer_config_vocode = ElevenLabsSynthesizerConfig(
-                api_key=os.getenv("ELEVEN_LABS_API_KEY"), **call.synthesizer_config
-            )
+    telephony_service_config, to_number, telephony_params = get_telephony_service_config(call)
+    agent_config = get_agent_config(call, prompt, initial_message)
+    transcriber_config = get_transcriber_config(call)
+    synthesizer_config = get_synthesizer_config(call)
 
     # log.debug(f"Telephony Service Config: {telephony_service_config_vocode}")
     # log.debug(f"Agent Config: {agent_config_vocode}")
@@ -303,10 +330,10 @@ async def make_outbound_call(self, call_id: str):
             from_phone=call.from_number,
             config_manager=CONFIG_MANAGER,
             conversation_id=conversation_id,
-            transcriber_config=transcriber_config_vocode,
-            agent_config=agent_config_vocode,
-            synthesizer_config=synthesizer_config_vocode,
-            telephony_config=telephony_service_config_vocode,
+            transcriber_config=transcriber_config,
+            agent_config=agent_config,
+            synthesizer_config=synthesizer_config,
+            telephony_config=telephony_service_config,
             telephony_params=telephony_params,
         )
         await outbound_call.start()
@@ -315,10 +342,9 @@ async def make_outbound_call(self, call_id: str):
         init_succeeded = False
 
     if init_succeeded:
-        call.status = CallStatus.INITIATED.value
+        await CallRepository(db).update(values={"status": CallStatus.INITIATED.value}, id=call.id)
     else:
-        call.status = CallStatus.FAILED.value
-    await CallRepository(db).update(call, id=call.id)
+        await CallRepository(db).update(values={"status": CallStatus.FAILED.value}, id=call.id)
 
 
 @celery_app.task(name="timeout_initiated_calls_task")

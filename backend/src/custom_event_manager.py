@@ -44,14 +44,10 @@ class CustomEventsManager(EventsManager):
                 await CallRepository(db).update(
                     values={"transcript": event.transcript.to_string()}, id=event.conversation_id
                 )
-                log.warning(f"[Transcript completed event] Transcript: {event.transcript.to_string()}")
             if isinstance(event, PhoneCallConnectedEvent):
                 await CallRepository(db).update(
                     values={"start_time": datetime.utcnow(), "status": CallStatus.IN_PROGRESS.value},
                     id=event.conversation_id,
-                )
-                log.warning(
-                    f"[Phone call connected event] {event.to_phone_number} -> {event.from_phone_number}"
                 )
             if isinstance(event, PhoneCallDidNotConnectEvent):
                 log.warning(

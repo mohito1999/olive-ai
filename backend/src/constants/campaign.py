@@ -28,6 +28,10 @@ class AgentConfigClass(str, Enum):
     LANGCHAIN = "LangchainAgentConfig"
 
 
+class AgentActionConfigClass(str, Enum):
+    STORE_REMARK = "StoreRemarkActionConfig"
+
+
 class TranscriberConfigClass(str, Enum):
     DEEPGRAM = "DeepgramTranscriberConfig"
 

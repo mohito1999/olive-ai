@@ -8,12 +8,7 @@ from langgraph.checkpoint import MemorySaver
 from langgraph.graph import END, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 from loguru import logger
-
-# from pydantic import Field
-from pydantic.v1 import BaseModel, Field
-from vocode.streaming.action.abstract_factory import AbstractActionFactory
-from vocode.streaming.action.base_action import BaseAction
-from vocode.streaming.action.default_factory import CONVERSATION_ACTIONS
+from vocode.streaming.action.default_factory import CONVERSATION_ACTIONS, DefaultActionFactory
 from vocode.streaming.agent.abstract_factory import AbstractAgentFactory
 from vocode.streaming.agent.anthropic_agent import AnthropicAgent
 from vocode.streaming.agent.base_agent import BaseAgent, GeneratedResponse, StreamedResponse
@@ -29,7 +24,6 @@ from vocode.streaming.agent.streaming_utils import (
     stream_response_async,
 )
 from vocode.streaming.models.actions import ActionConfig as VocodeActionConfig
-from vocode.streaming.models.actions import ActionInput, ActionOutput
 from vocode.streaming.models.agent import (
     AgentConfig,
     AnthropicAgentConfig,
@@ -43,6 +37,7 @@ from vocode.streaming.models.agent import (
 from vocode.streaming.models.message import BaseMessage, LLMToken
 from vocode.utils.sentry_utils import CustomSentrySpans, sentry_create_span
 
+from actions import ACTION_STORE_REMARK_TYPE, StoreRemarkAction, StoreRemarkActionConfig
 from custom_langchain import custom_init_chat_model
 
 ################################################
@@ -134,9 +129,7 @@ class CustomLangchainAgent(LangchainAgent):
                 first_sentence_total_span.finish()
 
             ResponseClass = (
-                StreamedResponse
-                if using_input_streaming_synthesizer
-                else GeneratedResponse
+                StreamedResponse if using_input_streaming_synthesizer else GeneratedResponse
             )
             MessageType = LLMToken if using_input_streaming_synthesizer else BaseMessage
 
@@ -178,84 +171,14 @@ class CustomLangchainAgent(LangchainAgent):
                     )
 
 
-@tool
-def search_the_internet(query: str):
-    """Search a query on the internet"""
-    logger.warning(query)
-    return "This is what I found!"
-
-
-class LogToConsoleParameters(BaseModel):
-    message: str = Field(..., description="Message to log to console")
-
-
-class LogToConsoleResponse(BaseModel):
-    message: str = Field(..., description="Message to return to the user")
-
-
-class LogToConsoleActionConfig(
-    VocodeActionConfig,
-    type="action_log_message_to_console",  # type: ignore
-):
-    pass
-
-class LogToConsoleAction(
-    BaseAction[
-        LogToConsoleActionConfig,
-        LogToConsoleParameters,
-        LogToConsoleResponse,
-    ]
-):
-    description: str = """Log a message to the server console.
-    The input to this action is a message string, and the output is a message which can be returned to the user.
-    """
-    parameters_type: Type[LogToConsoleParameters] = LogToConsoleParameters
-    response_type: Type[LogToConsoleResponse] = LogToConsoleResponse
-
-    def __init__(
-        self,
-        action_config: LogToConsoleActionConfig,
-    ):
-        super().__init__(
-            action_config,
-            should_respond="sometimes",
-            quiet=False,
-            is_interruptible=True,
-        )
-
-    async def run(
-        self, action_input: ActionInput[LogToConsoleParameters]
-    ) -> ActionOutput[LogToConsoleResponse]:
-        message = action_input.params.message
-        logger.warning(message)
-        return ActionOutput(
-            action_type=action_input.action_config.type,
-            response=LogToConsoleResponse(message="Logged message successfully to console"),
-        )
-
-
-class CustomActionFactory(AbstractActionFactory):
+class CustomActionFactory(DefaultActionFactory):
     def __init__(self, actions: Sequence[VocodeActionConfig] | dict = {}):
         self.action_configs_dict = {action.type: action for action in actions}
-        self.action_configs_dict.update(
-            {
-                "action_log_message_to_console": LogToConsoleActionConfig(
-                    type="action_log_message_to_console"
-                )
-            }
-        )
+        self.action_configs_dict.update({ACTION_STORE_REMARK_TYPE: StoreRemarkActionConfig()})
         self.actions = {
             **CONVERSATION_ACTIONS,
-            "action_log_message_to_console": LogToConsoleAction,
+            ACTION_STORE_REMARK_TYPE: StoreRemarkAction,
         }
-
-    def create_action(self, action_config: VocodeActionConfig):
-        if action_config.type not in self.action_configs_dict:
-            raise Exception("Action type not supported by Agent config.")
-
-        action_class = self.actions[action_config.type]
-
-        return action_class(action_config)
 
 
 class CustomAgentFactory(AbstractAgentFactory):
@@ -267,20 +190,14 @@ class CustomAgentFactory(AbstractAgentFactory):
         elif isinstance(agent_config, RESTfulUserImplementedAgentConfig):
             return RESTfulUserImplementedAgent(agent_config=agent_config)
         elif isinstance(agent_config, GroqAgentConfig):
-            return GroqAgent(
-                agent_config=agent_config, action_factory=CustomActionFactory()
-            )
+            return GroqAgent(agent_config=agent_config, action_factory=CustomActionFactory())
         elif isinstance(agent_config, AnthropicAgentConfig):
             return AnthropicAgent(agent_config=agent_config)
         elif isinstance(agent_config, LangchainAgentConfig):
             messages_for_prompt_template = [("placeholder", "{chat_history}")]
             if agent_config.prompt_preamble:
-                messages_for_prompt_template.insert(
-                    0, ("system", agent_config.prompt_preamble)
-                )
-            prompt_template = ChatPromptTemplate.from_messages(
-                messages_for_prompt_template
-            )
+                messages_for_prompt_template.insert(0, ("system", agent_config.prompt_preamble))
+            prompt_template = ChatPromptTemplate.from_messages(messages_for_prompt_template)
             model = custom_init_chat_model(
                 model=agent_config.model_name,
                 model_provider=agent_config.provider,
@@ -288,7 +205,7 @@ class CustomAgentFactory(AbstractAgentFactory):
                 max_tokens=agent_config.max_tokens,
                 # location="asia-south1",
             )
-            tools = [search_the_internet]
+            tools = []
             tool_node = ToolNode(tools)
             model_with_tools = model.bind_tools(tools)
 
@@ -318,7 +235,7 @@ class CustomAgentFactory(AbstractAgentFactory):
 
             workflow.add_edge("tools", "agent")
             # checkpointer = MemorySaver()
-            app = workflow.compile()
+            # app = workflow.compile()
 
             # chain = prompt_template | app
             chain = prompt_template | model
