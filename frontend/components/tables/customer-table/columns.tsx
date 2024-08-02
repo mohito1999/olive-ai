@@ -1,18 +1,17 @@
-'use client';
-import { ColumnDef } from '@tanstack/react-table';
-import { CellAction } from './cell-action';
-import { Customer } from '@/types/customer';
-import { Checkbox } from '@/components/ui/checkbox';
+"use client";
+import { ColumnDef } from "@tanstack/react-table";
+import { CellAction } from "./cell-action";
+import { Customer } from "@/types/customer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { EditableCodeBlock } from "@/components/editable-codeblock";
 
 export const columns: ColumnDef<Customer>[] = [
     {
-        id: 'select',
+        id: "select",
         header: ({ table }) => (
             <Checkbox
                 checked={table.getIsAllPageRowsSelected()}
-                onCheckedChange={(value) =>
-                    table.toggleAllPageRowsSelected(!!value)
-                }
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
                 aria-label="Select all"
             />
         ),
@@ -27,19 +26,29 @@ export const columns: ColumnDef<Customer>[] = [
         enableHiding: false
     },
     {
-        accessorKey: 'name',
-        header: 'Name'
+        accessorKey: "name",
+        header: "Name"
     },
     {
-        accessorKey: 'mobile_number',
-        header: 'Mobile number'
+        accessorKey: "mobile_number",
+        header: "Mobile number"
     },
     {
-        accessorKey: 'id',
-        header: 'ID'
+        accessorKey: "id",
+        header: "ID"
     },
     {
-        id: 'actions',
+        accessorKey: "customer_metadata",
+        header: "Customer metadata",
+        cell: ({ row }) => (
+            <EditableCodeBlock
+                isEditable={false}
+                value={JSON.stringify(row.original.customer_metadata)}
+            />
+        )
+    },
+    {
+        id: "actions",
         cell: ({ row }) => <CellAction data={row.original} />
     }
 ];

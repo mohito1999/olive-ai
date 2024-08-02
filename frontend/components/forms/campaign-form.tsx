@@ -27,6 +27,7 @@ import {
   MultiSelectorList,
   MultiSelectorTrigger
 } from "@/components/ui/multi-select";
+import { EditableCodeBlock } from "@/components/editable-codeblock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,20 +104,6 @@ export const CampaignForm = ({
     values: defaultValues,
     mode: "onChange"
   });
-
-  const getFormattedJsonValue = (value: string | null) => {
-    if (!value) {
-      return null;
-    }
-
-    let parsed = null;
-    try {
-      parsed = JSON.parse(value);
-    } catch (e) {
-      return typeof value === "object" ? JSON.stringify(value) : value;
-    }
-    return JSON.stringify(parsed, null, 2);
-  };
 
   return (
     <>
@@ -270,7 +257,7 @@ export const CampaignForm = ({
                 <AccordionTrigger>Advanced</AccordionTrigger>
                 <AccordionContent>
                   <div className="gap-6 md:grid md:grid-cols-2">
-                    <div className="rounded border p-4">
+                    <div className="flex flex-col gap-4 rounded border p-4">
                       <FormField
                         control={form.control}
                         name="telephony_service_id"
@@ -311,27 +298,18 @@ export const CampaignForm = ({
                               Telephony service config
                             </FormLabel>
                             <FormControl>
-                              <pre
-                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                                contentEditable={!isLoading}
-                                suppressContentEditableWarning={
-                                  true
-                                }
-                                onBlur={(e) =>
-                                  field.onChange(
-                                    e.currentTarget.textContent
-                                  )
-                                }
-                              >
-                                {getFormattedJsonValue(field.value)}
-                              </pre>
+                              <EditableCodeBlock
+                                isEditable={!isLoading}
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                    <div className="rounded border p-4">
+                    <div className="flex flex-col gap-4 rounded border p-4">
                       <FormField
                         control={form.control}
                         name="transcriber_id"
@@ -370,27 +348,18 @@ export const CampaignForm = ({
                           <FormItem>
                             <FormLabel>Transcriber config</FormLabel>
                             <FormControl>
-                              <pre
-                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                                contentEditable={!isLoading}
-                                suppressContentEditableWarning={
-                                  true
-                                }
-                                onBlur={(e) =>
-                                  field.onChange(
-                                    e.currentTarget.textContent
-                                  )
-                                }
-                              >
-                                {getFormattedJsonValue(field.value)}
-                              </pre>
+                              <EditableCodeBlock
+                                isEditable={!isLoading}
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                    <div className="rounded border p-4">
+                    <div className="flex flex-col gap-4 rounded border p-4">
                       <FormField
                         control={form.control}
                         name="agent_id"
@@ -429,27 +398,18 @@ export const CampaignForm = ({
                           <FormItem>
                             <FormLabel>Agent config</FormLabel>
                             <FormControl>
-                              <pre
-                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                                contentEditable={!isLoading}
-                                suppressContentEditableWarning={
-                                  true
-                                }
-                                onBlur={(e) =>
-                                  field.onChange(
-                                    e.currentTarget.textContent
-                                  )
-                                }
-                              >
-                                {getFormattedJsonValue(field.value)}
-                              </pre>
+                              <EditableCodeBlock
+                                isEditable={!isLoading}
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                    <div className="rounded border p-4">
+                    <div className="flex flex-col gap-4 rounded border p-4">
                       <FormField
                         control={form.control}
                         name="synthesizer_id"
@@ -488,20 +448,11 @@ export const CampaignForm = ({
                           <FormItem>
                             <FormLabel>Synthesizer config</FormLabel>
                             <FormControl>
-                              <pre
-                                className="rounded-md bg-muted p-1 p-2 text-xs text-foreground"
-                                contentEditable={!isLoading}
-                                suppressContentEditableWarning={
-                                  true
-                                }
-                                onBlur={(e) =>
-                                  field.onChange(
-                                    e.currentTarget.textContent
-                                  )
-                                }
-                              >
-                                {getFormattedJsonValue(field.value)}
-                              </pre>
+                              <EditableCodeBlock
+                                isEditable={!isLoading}
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
