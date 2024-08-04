@@ -9,5 +9,5 @@ interface ProductsClientProps {
 }
 
 export const CustomerTable: React.FC<ProductsClientProps> = ({ data, pageCount }) => {
-    return <DataTable searchKey="name" columns={columns} pageCount={pageCount} data={data} />;
+    return <DataTable searchKeys={["name"]} columns={columns} pageCount={pageCount} data={data} />;
 };

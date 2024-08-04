@@ -35,7 +35,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    searchKey: string;
+    searchKeys: string[];
     pageSizeOptions?: number[];
     pageCount: number;
     searchParams?: {
@@ -46,7 +46,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
     columns,
     data,
-    searchKey,
+    searchKeys,
     pageCount,
     pageSizeOptions = [10, 20, 30, 40, 50]
 }: DataTableProps<TData, TValue>) {
@@ -60,7 +60,7 @@ export function DataTable<TData, TValue>({
     const perPage = searchParams?.get("limit") ?? "10";
     const perPageAsNumber = Number(perPage);
     const fallbackPerPage = isNaN(perPageAsNumber) ? 10 : perPageAsNumber;
-    const searchValueQuery = searchParams?.get("search") ?? "";
+    // const searchValueQuery = searchParams?.get("search") ?? "";
 
     // Create query string
     const createQueryString = React.useCallback(
@@ -114,53 +114,56 @@ export function DataTable<TData, TValue>({
         manualPagination: true
     });
 
-    const searchValue = (table.getColumn(searchKey)?.getFilterValue() as string);
-
-    React.useEffect(() => {
-        if (searchValueQuery) {
-            table.getColumn(searchKey)?.setFilterValue(searchValueQuery);
-        }
-    }, []);
-
-    React.useEffect(() => {
-        if (searchValue?.length > 0) {
-            router.push(
-                `${pathname}?${createQueryString({
-                    page: null,
-                    limit: null,
-                    search: searchValue
-                })}`,
-                {
-                    scroll: false
-                }
-            );
-        }
-        if (searchValue?.length === 0 || searchValue === undefined) {
-            router.push(
-                `${pathname}?${createQueryString({
-                    page: null,
-                    limit: null,
-                    search: null
-                })}`,
-                {
-                    scroll: false
-                }
-            );
-        }
-
-        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchValue]);
+    // const searchValue = (table.getColumn(searchKeys)?.getFilterValue() as string);
+    //
+    // React.useEffect(() => {
+    //     if (searchValueQuery) {
+    //         table.getColumn(searchKeys)?.setFilterValue(searchValueQuery);
+    //     }
+    // }, []);
+    //
+    // React.useEffect(() => {
+    //     if (searchValue?.length > 0) {
+    //         router.push(
+    //             `${pathname}?${createQueryString({
+    //                 page: null,
+    //                 limit: null,
+    //                 search: searchValue
+    //             })}`,
+    //             {
+    //                 scroll: false
+    //             }
+    //         );
+    //     }
+    //     if (searchValue?.length === 0 || searchValue === undefined) {
+    //         router.push(
+    //             `${pathname}?${createQueryString({
+    //                 page: null,
+    //                 limit: null,
+    //                 search: null
+    //             })}`,
+    //             {
+    //                 scroll: false
+    //             }
+    //         );
+    //     }
+    //
+    //     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    //
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [searchValue]);
 
     return (
         <>
-            <Input
-                placeholder={`Search ${searchKey}...`}
-                value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-                onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
-                className="w-full md:max-w-sm"
-            />
+            {searchKeys && searchKeys.length > 0 && searchKeys.map((searchKey) => (
+                <Input
+                    placeholder={`Search ${searchKey}...`}
+                    key={searchKey}
+                    value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
+                    onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
+                    className="w-full md:max-w-sm"
+                />
+            ))}
             <ScrollArea className="h-[calc(80vh-220px)] rounded-md border">
                 <Table className="relative">
                     <TableHeader>

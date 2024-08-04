@@ -16,7 +16,7 @@ export default function Sidebar({ className }: SidebarProps) {
     const role = user?.user_metadata.role;
 
     let visibleNavItems = navItems
-    if (role !== "ADMIN") { // TODO: change this
+    if (role === "ADMIN") {
         visibleNavItems = [...navItems, ...adminNavItems]
     }
 
