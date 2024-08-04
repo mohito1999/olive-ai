@@ -122,7 +122,7 @@ export const navItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
     {
         title: "Test call",
-        href: "/test-call",
+        href: "/admin/test-call",
         icon: "chevronRight",
         label: "Test call"
     }

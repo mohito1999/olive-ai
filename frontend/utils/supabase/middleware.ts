@@ -43,6 +43,13 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
+
+    if (url.pathname.startsWith("/admin")) {
+      const role = user.user_metadata.role;
+      if (role !== "ADMIN") {
+        return NextResponse.rewrite(new URL("/not-found", request.url));
+      }
+    }
   } else {
     if (!url.pathname.startsWith("/login") && !url.pathname.startsWith("/auth")) {
       url.pathname = "/login";
