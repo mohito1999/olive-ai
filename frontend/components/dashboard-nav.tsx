@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { NavItem } from "@/types";
 import { Dispatch, SetStateAction } from "react";
 import { useSidebar } from "@/hooks/useSidebar";
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface DashboardNavProps {
@@ -72,12 +71,12 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
                     );
                 })}
 
-                <span className="mt-auto w-full border-t" />
+                <span className="w-full border-t" />
 
                 <Tooltip key="logout">
                     <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
+                        <Link
+                            href="#"
                             className="flex items-center gap-2 overflow-hidden rounded-md py-2 text-left text-sm font-medium hover:bg-accent hover:text-accent-foreground"
                             onClick={logout}
                         >
@@ -88,7 +87,7 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
                             ) : (
                                 ""
                             )}
-                        </Button>
+                        </Link>
                     </TooltipTrigger>
                     <TooltipContent
                         align="center"

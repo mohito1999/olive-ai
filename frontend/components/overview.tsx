@@ -1,78 +1,69 @@
-'use client';
+"use client";
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCampaignsQuery } from "@/store/campaign";
+import { useCustomerSetsQuery } from "@/store/customer_set";
+import { useCallsQuery } from "@/store/call";
+import { CallLogsTable } from "./tables/call-logs-table/call-logs-table";
+import { DataTable } from "./ui/data-table-new";
+import { columns } from "./tables/call-logs-table/columns";
 
-const data = [
-    {
-        name: 'Jan',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Feb',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Mar',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Apr',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'May',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Jun',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Jul',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Aug',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Sep',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Oct',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Nov',
-        total: Math.floor(Math.random() * 5000) + 1000
-    },
-    {
-        name: 'Dec',
-        total: Math.floor(Math.random() * 5000) + 1000
-    }
-];
+export const Overview = () => {
+  const { data: campaigns, isLoading: isLoadingCampaings } = useCampaignsQuery();
+  const { data: customerSets, isLoading: isLoadingCustomerSets } = useCustomerSetsQuery();
+  const { data: calls, isLoading: isLoadingCalls } = useCallsQuery(10);
 
-export function Overview() {
-    return (
-        <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={data}>
-                <XAxis
-                    dataKey="name"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                />
-                <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
-                />
-                <Bar dataKey="total" fill="#adfa1d" radius={[4, 4, 0, 0]} />
-            </BarChart>
-        </ResponsiveContainer>
-    );
-}
+  const campaignCount = campaigns?.length || 0;
+  const customerSetCount = customerSets?.length || 0;
+
+  return (
+    <>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Campaings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingCampaings ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <span className="text-2xl font-bold">{campaignCount}</span>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Customer Sets</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingCustomerSets ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <span className="text-2xl font-bold">{customerSetCount}</span>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      <CardTitle className="text-sm font-medium">Last 10 calls</CardTitle>
+      <Suspense>
+        {isLoadingCalls ? (
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-8 w-full" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-64" />
+            </div>
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-48" />
+            </div>
+          </div>
+        ) : (
+          <DataTable columns={columns} pageCount={1} data={calls ?? []} searchKeys={[]} showPaginationOptions={false} />
+        )}
+      </Suspense>
+    </>
+  );
+};

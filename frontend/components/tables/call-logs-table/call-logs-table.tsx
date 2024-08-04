@@ -9,5 +9,5 @@ interface ProductsClientProps {
 }
 
 export const CallLogsTable: React.FC<ProductsClientProps> = ({ data, pageCount }) => {
-    return <DataTable searchKeys={["to_number", "campaign_id"]} columns={columns} pageCount={pageCount} data={data} />;
+    return <DataTable searchKeys={["campaign_id", "to_number"]} columns={columns} pageCount={pageCount} data={data} />;
 };
